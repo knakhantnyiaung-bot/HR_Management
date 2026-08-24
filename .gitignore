@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# OS
+.DS_Store
+
+# Prisma
+backend/prisma/migrations/dev.db
+
+# Testing / coverage
+coverage/
+
+# Misc
+*.tsbuildinfo
+backend/prisma/seed.js
+backend/prisma/seed.js.map
+backend/vitest.config.js
+backend/vitest.config.js.map
