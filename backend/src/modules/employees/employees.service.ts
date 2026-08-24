@@ -97,6 +97,17 @@ export async function getEmployeeById(
   return employee;
 }
 
+// Shared across modules (attendance, leave, overtime, ...) that need to
+// resolve "the employee record for whoever is making this request" — the
+// Employee module owns this lookup per HLD section 7's module ownership table.
+export async function getEmployeeByUserId(organizationId: string, userId: string) {
+  const employee = await prisma.employee.findFirst({ where: { userId, organizationId } });
+  if (!employee) {
+    throw AppError.notFound("Employee");
+  }
+  return employee;
+}
+
 export async function createEmployee(
   organizationId: string,
   input: CreateEmployeeInput,

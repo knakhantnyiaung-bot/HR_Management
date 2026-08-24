@@ -2,6 +2,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@database/prisma";
 import { AppError } from "@common/errors/AppError";
 import { recordAudit } from "@modules/audit/audit.service";
+import { getEmployeeByUserId } from "@modules/employees/employees.service";
 import type {
   CorrectAttendanceInput,
   ListAttendanceQuery,
@@ -28,16 +29,8 @@ async function getBusinessDate(organizationId: string, at: Date): Promise<Date> 
   return new Date(`${isoDate}T00:00:00.000Z`);
 }
 
-async function getOwnEmployee(organizationId: string, userId: string) {
-  const employee = await prisma.employee.findFirst({ where: { userId, organizationId } });
-  if (!employee) {
-    throw AppError.notFound("Employee");
-  }
-  return employee;
-}
-
 async function getOwnActiveEmployee(organizationId: string, userId: string) {
-  const employee = await getOwnEmployee(organizationId, userId);
+  const employee = await getEmployeeByUserId(organizationId, userId);
   if (employee.status !== "ACTIVE") {
     throw AppError.businessRule(
       "EMPLOYEE_NOT_ACTIVE",
@@ -102,7 +95,7 @@ export async function listAttendance(
   if (requester.role === "EMPLOYEE") {
     // No ACTIVE requirement here — an inactive/terminated employee can still
     // see their own history, just not record new attendance (see checkIn).
-    const employee = await getOwnEmployee(organizationId, requester.userId);
+    const employee = await getEmployeeByUserId(organizationId, requester.userId);
     where.employeeId = employee.id;
   } else if (query.employeeId) {
     where.employeeId = query.employeeId;
