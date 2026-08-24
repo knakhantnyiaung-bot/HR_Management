@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import type { Prisma, PrismaClient } from "@prisma/client";
 import { prisma } from "@database/prisma";
 
 interface RecordAuditInput {
@@ -10,8 +10,11 @@ interface RecordAuditInput {
   metadata?: Prisma.InputJsonValue;
 }
 
+type DbClient = PrismaClient | Prisma.TransactionClient;
+
 // HLD section 18 — every sensitive mutation in other modules should call this
-// from within the same transaction as the mutation it is auditing.
-export async function recordAudit(input: RecordAuditInput) {
-  return prisma.auditLog.create({ data: input });
+// from within the same transaction as the mutation it is auditing, by
+// passing the `tx` client through instead of the default `prisma` singleton.
+export async function recordAudit(input: RecordAuditInput, client: DbClient = prisma) {
+  return client.auditLog.create({ data: input });
 }
