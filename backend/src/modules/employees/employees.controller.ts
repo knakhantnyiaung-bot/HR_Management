@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { AppError } from "@common/errors/AppError";
+import { requireAuthContext, requireIdParam } from "@common/http/requestHelpers";
 import {
   createEmployeeSchema,
   listEmployeesQuerySchema,
@@ -14,21 +15,6 @@ import {
   terminateEmployee,
   updateEmployee,
 } from "@modules/employees/employees.service";
-
-function requireAuthContext(req: Request) {
-  if (!req.auth) {
-    throw AppError.unauthorized();
-  }
-  return req.auth;
-}
-
-function requireIdParam(req: Request): string {
-  const id = req.params.id;
-  if (!id) {
-    throw AppError.badRequest("MISSING_ID", "Route parameter 'id' is required");
-  }
-  return id;
-}
 
 export async function listEmployeesHandler(req: Request, res: Response): Promise<void> {
   const { organizationId } = requireAuthContext(req);
