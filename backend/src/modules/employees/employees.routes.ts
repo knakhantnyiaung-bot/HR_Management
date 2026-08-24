@@ -1,7 +1,6 @@
 import { Router } from "express";
 import { requireAuth, requireRole } from "@common/auth/requireAuth";
 import { asyncHandler } from "@common/middleware/asyncHandler";
-import { notImplemented } from "@common/middleware/notImplemented";
 import {
   activateEmployeeHandler,
   createEmployeeHandler,
@@ -11,6 +10,11 @@ import {
   terminateEmployeeHandler,
   updateEmployeeHandler,
 } from "@modules/employees/employees.controller";
+import {
+  getSalaryProfileHandler,
+  listSalaryProfileHistoryHandler,
+  updateSalaryProfileHandler,
+} from "@modules/salary/salary.controller";
 
 // HLD Appendix B + roadmap item 5 (CRUD, lifecycle, account linking).
 // HR Admin / Super Admin manage the roster; an Employee may only read their
@@ -49,6 +53,19 @@ employeesRouter.post(
   asyncHandler(terminateEmployeeHandler),
 );
 
-// Salary is a separate roadmap item (#9) — left as scaffolded stubs for now.
-employeesRouter.get("/:id/salary-profile", requireAuth, notImplemented);
-employeesRouter.patch("/:id/salary-profile", requireAuth, notImplemented);
+// Salary (roadmap item #9) is owned by the salary module (HLD section 7),
+// but its URLs nest under /employees/:id per Appendix B.
+// RBAC (section 10): HR Admin "Manage", Employee "Own limited view".
+employeesRouter.get("/:id/salary-profile", requireAuth, asyncHandler(getSalaryProfileHandler));
+employeesRouter.patch(
+  "/:id/salary-profile",
+  requireAuth,
+  requireRole(...HR_ROLES),
+  asyncHandler(updateSalaryProfileHandler),
+);
+employeesRouter.get(
+  "/:id/salary-profile/history",
+  requireAuth,
+  requireRole(...HR_ROLES),
+  asyncHandler(listSalaryProfileHistoryHandler),
+);
