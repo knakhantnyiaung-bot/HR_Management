@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          # Matches backend/.env.test's DATABASE_URL exactly — nothing else
+          # needs to reference these credentials.
+          POSTGRES_USER: hr_payroll
+          POSTGRES_PASSWORD: hr_payroll_dev
+          POSTGRES_DB: hr_payroll_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U hr_payroll"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      # backend/.env isn't committed (gitignored), so the Prisma CLI steps
+      # below need this explicitly — `npm run test` also picks it up via the
+      # same value already checked into backend/.env.test.
+      DATABASE_URL: postgresql://hr_payroll:hr_payroll_dev@localhost:5432/hr_payroll_test?schema=public
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run prisma:generate --workspace=backend
+      - run: npm run prisma:deploy --workspace=backend
+
+      - run: npm run lint --workspace=backend
+      - run: npm run typecheck --workspace=backend
+      - run: npm run test --workspace=backend
+      - run: npm run build --workspace=backend
+
+  frontend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run lint --workspace=frontend
+      - run: npm run typecheck --workspace=frontend
+      - run: npm run build --workspace=frontend
+      # No `npm run test --workspace=frontend` — there's no frontend test
+      # suite yet (no test runner installed, no *.test.tsx files). Add one
+      # here once that exists.
