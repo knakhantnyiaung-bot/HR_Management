@@ -17,5 +17,38 @@ services:
       timeout: 5s
       retries: 5
 
+  backend:
+    build:
+      context: ./backend
+    container_name: hr_payroll_backend
+    restart: unless-stopped
+    command: sh -c "npx prisma migrate deploy && node dist/server.js"
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgresql://hr_payroll:hr_payroll_dev@postgres:5432/hr_payroll?schema=public
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-8h}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
+      DEFAULT_TIMEZONE: ${DEFAULT_TIMEZONE:-Asia/Yangon}
+      DEFAULT_CURRENCY: ${DEFAULT_CURRENCY:-MMK}
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: /api/v1
+    container_name: hr_payroll_frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
 volumes:
   postgres_data:
