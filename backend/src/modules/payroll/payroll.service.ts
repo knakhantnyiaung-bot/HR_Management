@@ -261,6 +261,11 @@ export async function calculatePayrollRun(organizationId: string, runId: string,
   });
 }
 
+// HLD state table: APPROVED = "Read/release" — approval is the point where
+// payslips (roadmap item 11) become visible to employees, so releasing one
+// PayrollItem-scoped Payslip per item happens in the same transaction as the
+// status transition rather than via a separate endpoint (the payslips API
+// surface is read-only, per HLD section 14).
 export async function approvePayrollRun(organizationId: string, runId: string, actorId: string) {
   return prisma.$transaction(async (tx) => {
     const locked = await lockPayrollRun(tx, organizationId, runId);
@@ -285,6 +290,24 @@ export async function approvePayrollRun(organizationId: string, runId: string, a
         resourceType: "PayrollRun",
         resourceId: runId,
         metadata: {},
+      },
+      tx,
+    );
+
+    const items = await tx.payrollItem.findMany({ where: { payrollRunId: runId }, select: { id: true } });
+    await tx.payslip.createMany({
+      data: items.map((item) => ({ payrollItemId: item.id })),
+      skipDuplicates: true,
+    });
+
+    await recordAudit(
+      {
+        organizationId,
+        actorId,
+        action: "PAYSLIPS_RELEASED",
+        resourceType: "PayrollRun",
+        resourceId: runId,
+        metadata: { count: items.length },
       },
       tx,
     );

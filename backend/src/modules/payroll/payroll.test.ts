@@ -79,6 +79,7 @@ describe("payroll module", () => {
 
   afterAll(async () => {
     await prisma.auditLog.deleteMany({ where: { organizationId } });
+    await prisma.payslip.deleteMany({ where: { payrollItem: { employee: { organizationId } } } });
     await prisma.payrollItem.deleteMany({ where: { employee: { organizationId } } });
     await prisma.payrollRun.deleteMany({ where: { organizationId } });
     await prisma.leaveRequest.deleteMany({ where: { employee: { organizationId } } });
@@ -173,8 +174,23 @@ describe("payroll module", () => {
         "PAYROLL_RUN_CALCULATED",
         "PAYROLL_RUN_CREATED",
         "PAYROLL_RUN_MARKED_PAID",
+        "PAYSLIPS_RELEASED",
       ].sort(),
     );
+
+    const payslip = await prisma.payslip.findFirst({
+      where: { payrollItem: { payrollRunId: runId, employeeId } },
+    });
+    expect(payslip).not.toBeNull();
+
+    const ownPayslips = await authed("get", "/api/v1/payslips", token);
+    expect(ownPayslips.status).toBe(200);
+    expect(ownPayslips.body.data).toHaveLength(1);
+    expect(ownPayslips.body.data[0].id).toBe(payslip!.id);
+
+    const getOwn = await authed("get", `/api/v1/payslips/${payslip!.id}`, token);
+    expect(getOwn.status).toBe(200);
+    expect(getOwn.body.data.payrollItem.employee.id).toBe(employeeId);
   });
 
   it("rejects creating a second run for the same period", async () => {
