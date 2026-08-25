@@ -11,6 +11,8 @@ import { EmployeeDetailPage } from "@/features/employees/EmployeeDetailPage";
 import { EmployeesListPage } from "@/features/employees/EmployeesListPage";
 import { LeavePage } from "@/features/leave/LeavePage";
 import { OvertimePage } from "@/features/overtime/OvertimePage";
+import { PayrollRunDetailPage } from "@/features/payroll/PayrollRunDetailPage";
+import { PayrollRunsListPage } from "@/features/payroll/PayrollRunsListPage";
 
 export function AppRoutes() {
   return (
@@ -33,6 +35,8 @@ export function AppRoutes() {
             <Route path="/employees" element={<EmployeesListPage />} />
             <Route path="/employees/new" element={<EmployeeCreatePage />} />
             <Route path="/employees/:id" element={<EmployeeDetailPage />} />
+            <Route path="/payroll" element={<PayrollRunsListPage />} />
+            <Route path="/payroll/:id" element={<PayrollRunDetailPage />} />
           </Route>
 
           <Route path="/me" element={<EmployeeDashboardPage />} />
