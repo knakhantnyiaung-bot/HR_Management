@@ -99,7 +99,7 @@ export function CorrectionForm({
         <button
           type="submit"
           disabled={correctMutation.isPending}
-          className="rounded-md bg-indigo-600 hover:bg-indigo-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+          className="rounded-md bg-indigo-600 transition-colors hover:bg-indigo-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
         >
           {correctMutation.isPending ? "Saving…" : "Save correction"}
         </button>

@@ -33,7 +33,7 @@ export function MyLeaveRequests({ employeeId }: { employeeId: string }) {
           <button
             type="button"
             onClick={() => setShowForm(true)}
-            className="rounded-md bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 text-sm font-medium text-white dark:bg-indigo-500 dark:hover:bg-indigo-400"
+            className="rounded-md bg-indigo-600 transition-colors hover:bg-indigo-700 px-3 py-1.5 text-sm font-medium text-white dark:bg-indigo-500 dark:hover:bg-indigo-400"
           >
             New request
           </button>
@@ -59,20 +59,20 @@ export function MyLeaveRequests({ employeeId }: { employeeId: string }) {
       )}
 
       {data && (
-        <div className="mt-2 overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800">
+        <div className="mt-2 overflow-x-auto rounded-lg border border-slate-200 shadow-sm dark:border-slate-800">
           <table className="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-800">
             <thead className="bg-slate-50 dark:bg-slate-900">
               <tr>
-                <th className="px-4 py-2 text-left font-medium text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Type
                 </th>
-                <th className="px-4 py-2 text-left font-medium text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Dates
                 </th>
-                <th className="px-4 py-2 text-left font-medium text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Days
                 </th>
-                <th className="px-4 py-2 text-left font-medium text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Status
                 </th>
                 <th className="px-4 py-2" />
@@ -87,18 +87,18 @@ export function MyLeaveRequests({ employeeId }: { employeeId: string }) {
                 </tr>
               )}
               {data.items.map((request) => (
-                <tr key={request.id}>
-                  <td className="px-4 py-2 text-slate-900 dark:text-slate-100">
+                <tr key={request.id} className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                  <td className="px-4 py-3 text-slate-900 dark:text-slate-100">
                     {request.leaveType.name}
                   </td>
-                  <td className="px-4 py-2 text-slate-700 dark:text-slate-300">
+                  <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
                     {formatDate(request.startDate)} – {formatDate(request.endDate)}
                   </td>
-                  <td className="px-4 py-2 text-slate-700 dark:text-slate-300">{request.days}</td>
-                  <td className="px-4 py-2">
+                  <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{request.days}</td>
+                  <td className="px-4 py-3">
                     <StatusBadge status={request.status} />
                   </td>
-                  <td className="px-4 py-2 text-right">
+                  <td className="px-4 py-3 text-right">
                     {CANCELLABLE.includes(request.status) && (
                       <button
                         type="button"

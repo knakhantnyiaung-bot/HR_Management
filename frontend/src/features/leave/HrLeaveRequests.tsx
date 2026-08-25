@@ -102,23 +102,23 @@ export function HrLeaveRequests() {
       )}
 
       {data && (
-        <div className="mt-4 overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800">
+        <div className="mt-4 overflow-hidden rounded-lg border border-slate-200 shadow-sm dark:border-slate-800">
           <table className="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-800">
             <thead className="bg-slate-50 dark:bg-slate-900">
               <tr>
-                <th className="px-4 py-2 text-left font-medium text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Employee
                 </th>
-                <th className="px-4 py-2 text-left font-medium text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Type
                 </th>
-                <th className="px-4 py-2 text-left font-medium text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Dates
                 </th>
-                <th className="px-4 py-2 text-left font-medium text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Days
                 </th>
-                <th className="px-4 py-2 text-left font-medium text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Status
                 </th>
                 <th className="px-4 py-2" />
@@ -133,21 +133,21 @@ export function HrLeaveRequests() {
                 </tr>
               )}
               {data.items.map((request) => (
-                <tr key={request.id}>
-                  <td className="px-4 py-2 text-slate-900 dark:text-slate-100">
+                <tr key={request.id} className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                  <td className="px-4 py-3 text-slate-900 dark:text-slate-100">
                     {request.employee.employeeNo}
                   </td>
-                  <td className="px-4 py-2 text-slate-700 dark:text-slate-300">
+                  <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
                     {request.leaveType.name}
                   </td>
-                  <td className="px-4 py-2 text-slate-700 dark:text-slate-300">
+                  <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
                     {formatDate(request.startDate)} – {formatDate(request.endDate)}
                   </td>
-                  <td className="px-4 py-2 text-slate-700 dark:text-slate-300">{request.days}</td>
-                  <td className="px-4 py-2">
+                  <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{request.days}</td>
+                  <td className="px-4 py-3">
                     <StatusBadge status={request.status} />
                   </td>
-                  <td className="px-4 py-2 text-right">
+                  <td className="px-4 py-3 text-right">
                     <div className="flex justify-end gap-3">
                       {request.status === "PENDING" && (
                         <>

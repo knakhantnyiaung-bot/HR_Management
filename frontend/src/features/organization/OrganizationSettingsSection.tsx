@@ -77,7 +77,7 @@ export function OrganizationSettingsSection() {
       )}
 
       {organization && !isEditing && (
-        <dl className="mt-2 grid grid-cols-2 gap-4 rounded-lg border border-slate-200 bg-white p-4 text-sm dark:border-slate-800 dark:bg-slate-900">
+        <dl className="mt-2 grid grid-cols-2 gap-4 rounded-lg border border-slate-200 bg-white p-4 text-sm shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <Field label="Name" value={organization.name} />
           <Field label="Timezone" value={organization.timezone} />
           <Field label="Currency" value={organization.currency} />
@@ -88,7 +88,7 @@ export function OrganizationSettingsSection() {
       {isEditing && (
         <form
           onSubmit={handleSubmit((values) => updateMutation.mutate(values))}
-          className="mt-2 space-y-4 rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"
+          className="mt-2 space-y-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900"
         >
           <div className="grid grid-cols-2 gap-4">
             <TextField label="Name" registration={register("name")} error={errors.name?.message} />
@@ -119,7 +119,7 @@ export function OrganizationSettingsSection() {
             <button
               type="submit"
               disabled={updateMutation.isPending}
-              className="rounded-md bg-indigo-600 hover:bg-indigo-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+              className="rounded-md bg-indigo-600 transition-colors hover:bg-indigo-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
             >
               {updateMutation.isPending ? "Saving…" : "Save"}
             </button>

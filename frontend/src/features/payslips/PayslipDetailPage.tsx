@@ -42,10 +42,10 @@ export function PayslipDetailPage() {
         ← Payslips
       </Link>
 
-      <div className="mt-4 rounded-lg border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
+      <div className="mt-4 rounded-lg border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className="flex items-start justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
           <div>
-            <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
               Payslip — {payrollItem.payrollRun.period}
             </h1>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">

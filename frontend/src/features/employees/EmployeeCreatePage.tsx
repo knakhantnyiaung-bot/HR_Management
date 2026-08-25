@@ -61,7 +61,7 @@ export function EmployeeCreatePage() {
 
   return (
     <div className="max-w-lg">
-      <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">New employee</h1>
+      <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">New employee</h1>
       <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
         Creates the login account and employee record together, starting in DRAFT status.
       </p>
@@ -123,7 +123,7 @@ export function EmployeeCreatePage() {
           <button
             type="submit"
             disabled={createMutation.isPending}
-            className="rounded-md bg-indigo-600 hover:bg-indigo-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+            className="rounded-md bg-indigo-600 transition-colors hover:bg-indigo-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
           >
             {createMutation.isPending ? "Creating…" : "Create employee"}
           </button>
@@ -140,8 +140,8 @@ function CreatedConfirmation({ employee }: { employee: CreateEmployeeResult }) {
   const navigate = useNavigate();
 
   return (
-    <div className="max-w-lg rounded-lg border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
-      <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+    <div className="max-w-lg rounded-lg border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
         Employee {employee.employeeNo} created
       </h1>
       {employee.temporaryPassword && (
@@ -157,7 +157,7 @@ function CreatedConfirmation({ employee }: { employee: CreateEmployeeResult }) {
       <button
         type="button"
         onClick={() => navigate(`/employees/${employee.id}`)}
-        className="mt-4 rounded-md bg-indigo-600 hover:bg-indigo-700 px-4 py-2 text-sm font-medium text-white dark:bg-indigo-500 dark:hover:bg-indigo-400"
+        className="mt-4 rounded-md bg-indigo-600 transition-colors hover:bg-indigo-700 px-4 py-2 text-sm font-medium text-white dark:bg-indigo-500 dark:hover:bg-indigo-400"
       >
         Go to employee
       </button>

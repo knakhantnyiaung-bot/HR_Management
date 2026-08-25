@@ -43,7 +43,7 @@ export function PayslipsListPage() {
 
   return (
     <div>
-      <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Payslips</h1>
+      <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Payslips</h1>
       <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
         {isHrRole ? "Released salary statements across the organization." : "Your released payslips."}
       </p>
@@ -79,25 +79,25 @@ export function PayslipsListPage() {
       )}
 
       {data && (
-        <div className="mt-4 overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800">
+        <div className="mt-4 overflow-hidden rounded-lg border border-slate-200 shadow-sm dark:border-slate-800">
           <table className="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-800">
             <thead className="bg-slate-50 dark:bg-slate-900">
               <tr>
-                <th className="px-4 py-2 text-left font-medium text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Period
                 </th>
                 {isHrRole && (
-                  <th className="px-4 py-2 text-left font-medium text-slate-500 dark:text-slate-400">
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                     Employee
                   </th>
                 )}
-                <th className="px-4 py-2 text-left font-medium text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Released
                 </th>
-                <th className="px-4 py-2 text-right font-medium text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Gross
                 </th>
-                <th className="px-4 py-2 text-right font-medium text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Net
                 </th>
               </tr>
@@ -114,8 +114,8 @@ export function PayslipsListPage() {
                 </tr>
               )}
               {data.items.map((payslip) => (
-                <tr key={payslip.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                  <td className="px-4 py-2">
+                <tr key={payslip.id} className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                  <td className="px-4 py-3">
                     <Link
                       to={`/payslips/${payslip.id}`}
                       className="font-medium text-indigo-600 hover:underline dark:text-indigo-400"
@@ -124,17 +124,17 @@ export function PayslipsListPage() {
                     </Link>
                   </td>
                   {isHrRole && (
-                    <td className="px-4 py-2 text-slate-700 dark:text-slate-300">
+                    <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
                       {payslip.payrollItem.employee.employeeNo}
                     </td>
                   )}
-                  <td className="px-4 py-2 text-slate-700 dark:text-slate-300">
+                  <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
                     {formatDate(payslip.releasedAt)}
                   </td>
-                  <td className="px-4 py-2 text-right text-slate-700 dark:text-slate-300">
+                  <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
                     {formatMoney(Number(payslip.payrollItem.gross))}
                   </td>
-                  <td className="px-4 py-2 text-right font-medium text-slate-900 dark:text-slate-100">
+                  <td className="px-4 py-3 text-right font-medium tabular-nums text-slate-900 dark:text-slate-100">
                     {formatMoney(Number(payslip.payrollItem.net))}
                   </td>
                 </tr>

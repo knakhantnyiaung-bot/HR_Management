@@ -54,7 +54,7 @@ export function PayrollRunsListPage() {
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Payroll</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Payroll</h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             Monthly runs, calculation, and approval.
           </p>
@@ -63,7 +63,7 @@ export function PayrollRunsListPage() {
           <button
             type="button"
             onClick={() => setShowForm(true)}
-            className="rounded-md bg-indigo-600 hover:bg-indigo-700 px-3 py-2 text-sm font-medium text-white dark:bg-indigo-500 dark:hover:bg-indigo-400"
+            className="rounded-md bg-indigo-600 transition-colors hover:bg-indigo-700 px-3 py-2 text-sm font-medium text-white dark:bg-indigo-500 dark:hover:bg-indigo-400"
           >
             New run
           </button>
@@ -73,7 +73,7 @@ export function PayrollRunsListPage() {
       {showForm && (
         <form
           onSubmit={handleSubmit((values) => createMutation.mutate(values))}
-          className="mt-4 flex items-end gap-3 rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"
+          className="mt-4 flex items-end gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900"
         >
           <div>
             <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -91,7 +91,7 @@ export function PayrollRunsListPage() {
           <button
             type="submit"
             disabled={createMutation.isPending}
-            className="rounded-md bg-indigo-600 hover:bg-indigo-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+            className="rounded-md bg-indigo-600 transition-colors hover:bg-indigo-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
           >
             {createMutation.isPending ? "Creating…" : "Create"}
           </button>
@@ -133,20 +133,20 @@ export function PayrollRunsListPage() {
       )}
 
       {data && (
-        <div className="mt-4 overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800">
+        <div className="mt-4 overflow-hidden rounded-lg border border-slate-200 shadow-sm dark:border-slate-800">
           <table className="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-800">
             <thead className="bg-slate-50 dark:bg-slate-900">
               <tr>
-                <th className="px-4 py-2 text-left font-medium text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Period
                 </th>
-                <th className="px-4 py-2 text-left font-medium text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Status
                 </th>
-                <th className="px-4 py-2 text-left font-medium text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Employees
                 </th>
-                <th className="px-4 py-2 text-right font-medium text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Net total
                 </th>
               </tr>
@@ -160,8 +160,8 @@ export function PayrollRunsListPage() {
                 </tr>
               )}
               {data.items.map((run) => (
-                <tr key={run.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                  <td className="px-4 py-2">
+                <tr key={run.id} className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                  <td className="px-4 py-3">
                     <Link
                       to={`/payroll/${run.id}`}
                       className="font-medium text-indigo-600 hover:underline dark:text-indigo-400"
@@ -169,13 +169,13 @@ export function PayrollRunsListPage() {
                       {run.period}
                     </Link>
                   </td>
-                  <td className="px-4 py-2">
+                  <td className="px-4 py-3">
                     <StatusBadge status={run.status} />
                   </td>
-                  <td className="px-4 py-2 text-slate-700 dark:text-slate-300">
+                  <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
                     {run.totals?.employeeCount ?? "—"}
                   </td>
-                  <td className="px-4 py-2 text-right text-slate-700 dark:text-slate-300">
+                  <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
                     {run.totals ? formatMoney(run.totals.netTotal) : "—"}
                   </td>
                 </tr>

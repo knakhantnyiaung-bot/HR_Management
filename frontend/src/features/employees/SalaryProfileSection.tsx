@@ -122,7 +122,7 @@ export function SalaryProfileSection({ employeeId }: { employeeId: string }) {
       </div>
 
       {!isEditing && (
-        <div className="mt-2 rounded-lg border border-slate-200 bg-white p-4 text-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="mt-2 rounded-lg border border-slate-200 bg-white p-4 text-sm shadow-sm dark:border-slate-800 dark:bg-slate-900">
           {isCurrentLoading && <p className="text-slate-400 dark:text-slate-500">Loading…</p>}
           {!isCurrentLoading && !current && (
             <p className="text-slate-400 dark:text-slate-500">No active salary profile.</p>
@@ -160,7 +160,7 @@ export function SalaryProfileSection({ employeeId }: { employeeId: string }) {
       {isEditing && (
         <form
           onSubmit={handleSubmit((values) => upsertMutation.mutate(values))}
-          className="mt-2 space-y-4 rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"
+          className="mt-2 space-y-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900"
         >
           <div className="grid grid-cols-2 gap-4">
             <TextField
@@ -219,7 +219,7 @@ export function SalaryProfileSection({ employeeId }: { employeeId: string }) {
             <button
               type="submit"
               disabled={upsertMutation.isPending}
-              className="rounded-md bg-indigo-600 hover:bg-indigo-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+              className="rounded-md bg-indigo-600 transition-colors hover:bg-indigo-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
             >
               {upsertMutation.isPending ? "Saving…" : "Save"}
             </button>
@@ -239,14 +239,14 @@ export function SalaryProfileSection({ employeeId }: { employeeId: string }) {
           <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
             History
           </h3>
-          <div className="mt-2 overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800">
+          <div className="mt-2 overflow-x-auto rounded-lg border border-slate-200 shadow-sm dark:border-slate-800">
             <table className="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-800">
               <thead className="bg-slate-50 dark:bg-slate-900">
                 <tr>
-                  <th className="px-4 py-2 text-left font-medium text-slate-500 dark:text-slate-400">
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                     Effective from
                   </th>
-                  <th className="px-4 py-2 text-left font-medium text-slate-500 dark:text-slate-400">
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                     Effective to
                   </th>
                   <th className="px-4 py-2 text-right font-medium text-slate-500 dark:text-slate-400">
@@ -256,14 +256,14 @@ export function SalaryProfileSection({ employeeId }: { employeeId: string }) {
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white dark:divide-slate-800 dark:bg-slate-900">
                 {history.map((profile) => (
-                  <tr key={profile.id}>
-                    <td className="px-4 py-2 text-slate-700 dark:text-slate-300">
+                  <tr key={profile.id} className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                    <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
                       {profile.effectiveFrom.slice(0, 10)}
                     </td>
-                    <td className="px-4 py-2 text-slate-700 dark:text-slate-300">
+                    <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
                       {profile.effectiveTo ? profile.effectiveTo.slice(0, 10) : "Ongoing"}
                     </td>
-                    <td className="px-4 py-2 text-right text-slate-700 dark:text-slate-300">
+                    <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">
                       {formatMoney(Number(profile.basicSalary))}
                     </td>
                   </tr>

@@ -50,7 +50,7 @@ export function PayrollRunDetailPage() {
       </Link>
 
       <div className="mt-2 flex items-start justify-between">
-        <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{run.period}</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">{run.period}</h1>
         <StatusBadge status={run.status} />
       </div>
 
@@ -74,7 +74,7 @@ export function PayrollRunDetailPage() {
             type="button"
             onClick={() => approveMutation.mutate()}
             disabled={isActionPending}
-            className="rounded-md bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+            className="rounded-md bg-indigo-600 transition-colors hover:bg-indigo-700 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
           >
             {approveMutation.isPending ? "Approving…" : "Approve"}
           </button>
@@ -89,7 +89,7 @@ export function PayrollRunDetailPage() {
             type="button"
             onClick={() => markPaidMutation.mutate()}
             disabled={isActionPending}
-            className="rounded-md bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+            className="rounded-md bg-indigo-600 transition-colors hover:bg-indigo-700 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
           >
             {markPaidMutation.isPending ? "Marking paid…" : "Mark as paid"}
           </button>
@@ -111,37 +111,37 @@ export function PayrollRunDetailPage() {
       )}
 
       {run.items && run.items.length > 0 && (
-        <div className="mt-6 overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800">
+        <div className="mt-6 overflow-x-auto rounded-lg border border-slate-200 shadow-sm dark:border-slate-800">
           <table className="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-800">
             <thead className="bg-slate-50 dark:bg-slate-900">
               <tr>
-                <th className="px-4 py-2 text-left font-medium text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Employee
                 </th>
-                <th className="px-4 py-2 text-right font-medium text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Gross
                 </th>
-                <th className="px-4 py-2 text-right font-medium text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Deductions
                 </th>
-                <th className="px-4 py-2 text-right font-medium text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Net
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white dark:divide-slate-800 dark:bg-slate-900">
               {run.items.map((item) => (
-                <tr key={item.id}>
-                  <td className="px-4 py-2 text-slate-900 dark:text-slate-100">
+                <tr key={item.id} className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                  <td className="px-4 py-3 text-slate-900 dark:text-slate-100">
                     {item.employee.employeeNo}
                   </td>
-                  <td className="px-4 py-2 text-right text-slate-700 dark:text-slate-300">
+                  <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
                     {formatMoney(Number(item.gross))}
                   </td>
-                  <td className="px-4 py-2 text-right text-slate-700 dark:text-slate-300">
+                  <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-300">
                     {formatMoney(Number(item.deductions))}
                   </td>
-                  <td className="px-4 py-2 text-right font-medium text-slate-900 dark:text-slate-100">
+                  <td className="px-4 py-3 text-right font-medium tabular-nums text-slate-900 dark:text-slate-100">
                     {formatMoney(Number(item.net))}
                   </td>
                 </tr>

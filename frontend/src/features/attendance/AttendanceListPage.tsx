@@ -57,7 +57,7 @@ export function AttendanceListPage() {
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Attendance</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Attendance</h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             {isHrRole ? "Records across the organization." : "Your check-in/out history."}
           </p>
@@ -68,7 +68,7 @@ export function AttendanceListPage() {
               type="button"
               onClick={() => checkInMutation.mutate()}
               disabled={checkInMutation.isPending}
-              className="rounded-md bg-indigo-600 hover:bg-indigo-700 px-3 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+              className="rounded-md bg-indigo-600 transition-colors hover:bg-indigo-700 px-3 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
             >
               Check in
             </button>
@@ -128,29 +128,29 @@ export function AttendanceListPage() {
       )}
 
       {data && (
-        <div className="mt-4 overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800">
+        <div className="mt-4 overflow-hidden rounded-lg border border-slate-200 shadow-sm dark:border-slate-800">
           <table className="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-800">
             <thead className="bg-slate-50 dark:bg-slate-900">
               <tr>
-                <th className="px-4 py-2 text-left font-medium text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Date
                 </th>
                 {isHrRole && (
-                  <th className="px-4 py-2 text-left font-medium text-slate-500 dark:text-slate-400">
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                     Employee
                   </th>
                 )}
-                <th className="px-4 py-2 text-left font-medium text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Check in
                 </th>
-                <th className="px-4 py-2 text-left font-medium text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Check out
                 </th>
-                <th className="px-4 py-2 text-left font-medium text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Duration
                 </th>
                 {isHrRole && (
-                  <th className="px-4 py-2 text-left font-medium text-slate-500 dark:text-slate-400">
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                     Correction
                   </th>
                 )}
@@ -170,31 +170,31 @@ export function AttendanceListPage() {
               )}
               {data.items.map((record) => (
                 <Fragment key={record.id}>
-                  <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                    <td className="px-4 py-2 text-slate-700 dark:text-slate-300">
+                  <tr className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                    <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
                       {formatDate(record.workDate)}
                     </td>
                     {isHrRole && (
-                      <td className="px-4 py-2 text-slate-700 dark:text-slate-300">
+                      <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
                         {record.employee.employeeNo}
                       </td>
                     )}
-                    <td className="px-4 py-2 text-slate-700 dark:text-slate-300">
+                    <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
                       {formatTime(record.checkIn)}
                     </td>
-                    <td className="px-4 py-2 text-slate-700 dark:text-slate-300">
+                    <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
                       {record.checkOut ? formatTime(record.checkOut) : "Still checked in"}
                     </td>
-                    <td className="px-4 py-2 text-slate-700 dark:text-slate-300">
+                    <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
                       {formatDuration(record.workingMinutes)}
                     </td>
                     {isHrRole && (
-                      <td className="px-4 py-2 text-slate-500 dark:text-slate-400">
+                      <td className="px-4 py-3 text-slate-500 dark:text-slate-400">
                         {record.correctionNote ?? "—"}
                       </td>
                     )}
                     {isHrRole && (
-                      <td className="px-4 py-2 text-right">
+                      <td className="px-4 py-3 text-right">
                         <button
                           type="button"
                           onClick={() =>

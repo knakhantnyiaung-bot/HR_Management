@@ -17,7 +17,7 @@ export function LeavePage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Leave</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Leave</h1>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           Types, balances, requests, and approvals.
         </p>

@@ -23,7 +23,7 @@ export function EmployeeDashboardPage() {
 
   return (
     <div>
-      <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">My Dashboard</h1>
+      <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">My Dashboard</h1>
       <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
         Today's status, leave balances, and requests.
       </p>
@@ -39,7 +39,7 @@ export function EmployeeDashboardPage() {
       {data && (
         <div className="mt-6 space-y-8">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+            <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
               <p className="text-sm text-slate-500 dark:text-slate-400">Today's attendance</p>
               {data.attendanceToday ? (
                 <p className="mt-1 text-sm text-slate-900 dark:text-slate-100">
@@ -57,7 +57,7 @@ export function EmployeeDashboardPage() {
                     type="button"
                     onClick={() => checkInMutation.mutate()}
                     disabled={checkInMutation.isPending}
-                    className="rounded-md bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+                    className="rounded-md bg-indigo-600 transition-colors hover:bg-indigo-700 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
                   >
                     {checkInMutation.isPending ? "Checking in…" : "Check in"}
                   </button>
@@ -91,11 +91,11 @@ export function EmployeeDashboardPage() {
                 No leave balances for this period.
               </p>
             ) : (
-              <div className="mt-2 overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800">
+              <div className="mt-2 overflow-x-auto rounded-lg border border-slate-200 shadow-sm dark:border-slate-800">
                 <table className="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-800">
                   <thead className="bg-slate-50 dark:bg-slate-900">
                     <tr>
-                      <th className="px-4 py-2 text-left font-medium text-slate-500 dark:text-slate-400">
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                         Leave type
                       </th>
                       <th className="px-4 py-2 text-right font-medium text-slate-500 dark:text-slate-400 [font-variant-numeric:tabular-nums]">
@@ -111,17 +111,17 @@ export function EmployeeDashboardPage() {
                   </thead>
                   <tbody className="divide-y divide-slate-100 bg-white dark:divide-slate-800 dark:bg-slate-900">
                     {data.leaveBalances.map((balance) => (
-                      <tr key={balance.id}>
-                        <td className="px-4 py-2 text-slate-900 dark:text-slate-100">
+                      <tr key={balance.id} className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                        <td className="px-4 py-3 text-slate-900 dark:text-slate-100">
                           {balance.leaveType.name}
                         </td>
-                        <td className="px-4 py-2 text-right text-slate-700 [font-variant-numeric:tabular-nums] dark:text-slate-300">
+                        <td className="px-4 py-3 text-right text-slate-700 [font-variant-numeric:tabular-nums] dark:text-slate-300">
                           {balance.entitled}
                         </td>
-                        <td className="px-4 py-2 text-right text-slate-700 [font-variant-numeric:tabular-nums] dark:text-slate-300">
+                        <td className="px-4 py-3 text-right text-slate-700 [font-variant-numeric:tabular-nums] dark:text-slate-300">
                           {balance.used}
                         </td>
-                        <td className="px-4 py-2 text-right font-medium text-slate-900 [font-variant-numeric:tabular-nums] dark:text-slate-100">
+                        <td className="px-4 py-3 text-right font-medium text-slate-900 [font-variant-numeric:tabular-nums] dark:text-slate-100">
                           {balance.remaining}
                         </td>
                       </tr>
@@ -137,7 +137,7 @@ export function EmployeeDashboardPage() {
               Latest payslip
             </h2>
             {data.latestPayslip ? (
-              <div className="mt-2 rounded-lg border border-slate-200 bg-white p-4 text-sm dark:border-slate-800 dark:bg-slate-900">
+              <div className="mt-2 rounded-lg border border-slate-200 bg-white p-4 text-sm shadow-sm dark:border-slate-800 dark:bg-slate-900">
                 <p className="text-slate-500 dark:text-slate-400">
                   {data.latestPayslip.payrollItem.payrollRun.period} · released{" "}
                   {formatDateTime(data.latestPayslip.releasedAt)}

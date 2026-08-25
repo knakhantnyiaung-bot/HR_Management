@@ -3,8 +3,8 @@ import { useAuth } from "@/features/auth/AuthContext";
 
 function navLinkClass({ isActive }: { isActive: boolean }): string {
   return isActive
-    ? "font-medium text-indigo-600 dark:text-indigo-400"
-    : "text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400";
+    ? "font-medium text-indigo-600 transition-colors dark:text-indigo-400"
+    : "text-slate-500 transition-colors hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400";
 }
 
 export function AppLayout() {
@@ -75,7 +75,7 @@ export function AppLayout() {
             <button
               type="button"
               onClick={handleLogout}
-              className="rounded-md border border-slate-300 px-3 py-1.5 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+              className="rounded-md border border-slate-300 px-3 py-1.5 text-slate-700 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
             >
               Log out
             </button>

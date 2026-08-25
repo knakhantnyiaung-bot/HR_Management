@@ -56,7 +56,7 @@ export function LeaveTypesAdmin() {
       {showForm && (
         <form
           onSubmit={handleSubmit((values) => createMutation.mutate(values))}
-          className="mt-2 flex items-end gap-3 rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"
+          className="mt-2 flex items-end gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900"
         >
           <div className="flex-1">
             <TextField label="Name" registration={register("name")} error={errors.name?.message} />
@@ -68,7 +68,7 @@ export function LeaveTypesAdmin() {
           <button
             type="submit"
             disabled={createMutation.isPending}
-            className="rounded-md bg-indigo-600 hover:bg-indigo-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+            className="rounded-md bg-indigo-600 transition-colors hover:bg-indigo-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
           >
             {createMutation.isPending ? "Saving…" : "Add"}
           </button>
@@ -89,7 +89,7 @@ export function LeaveTypesAdmin() {
 
       {isLoading && <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Loading…</p>}
       {leaveTypes && (
-        <ul className="mt-2 divide-y divide-slate-100 rounded-lg border border-slate-200 bg-white text-sm dark:divide-slate-800 dark:border-slate-800 dark:bg-slate-900">
+        <ul className="mt-2 divide-y divide-slate-100 rounded-lg border border-slate-200 bg-white text-sm dark:divide-slate-800 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           {leaveTypes.length === 0 && (
             <li className="px-4 py-3 text-slate-400 dark:text-slate-500">No leave types yet.</li>
           )}

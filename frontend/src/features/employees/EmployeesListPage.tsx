@@ -41,14 +41,14 @@ export function EmployeesListPage() {
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Employees</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Employees</h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             Roster, lifecycle, and compensation.
           </p>
         </div>
         <Link
           to="/employees/new"
-          className="rounded-md bg-indigo-600 hover:bg-indigo-700 px-3 py-2 text-sm font-medium text-white dark:bg-indigo-500 dark:hover:bg-indigo-400"
+          className="rounded-md bg-indigo-600 transition-colors hover:bg-indigo-700 px-3 py-2 text-sm font-medium text-white dark:bg-indigo-500 dark:hover:bg-indigo-400"
         >
           New employee
         </Link>
@@ -89,23 +89,23 @@ export function EmployeesListPage() {
       )}
 
       {data && (
-        <div className="mt-4 overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800">
+        <div className="mt-4 overflow-hidden rounded-lg border border-slate-200 shadow-sm dark:border-slate-800">
           <table className="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-800">
             <thead className="bg-slate-50 dark:bg-slate-900">
               <tr>
-                <th className="px-4 py-2 text-left font-medium text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Employee no.
                 </th>
-                <th className="px-4 py-2 text-left font-medium text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Email
                 </th>
-                <th className="px-4 py-2 text-left font-medium text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Department
                 </th>
-                <th className="px-4 py-2 text-left font-medium text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Position
                 </th>
-                <th className="px-4 py-2 text-left font-medium text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Status
                 </th>
               </tr>
@@ -122,8 +122,8 @@ export function EmployeesListPage() {
                 </tr>
               )}
               {data.items.map((employee) => (
-                <tr key={employee.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                  <td className="px-4 py-2">
+                <tr key={employee.id} className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                  <td className="px-4 py-3">
                     <Link
                       to={`/employees/${employee.id}`}
                       className="font-medium text-indigo-600 hover:underline dark:text-indigo-400"
@@ -131,16 +131,16 @@ export function EmployeesListPage() {
                       {employee.employeeNo}
                     </Link>
                   </td>
-                  <td className="px-4 py-2 text-slate-700 dark:text-slate-300">
+                  <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
                     {employee.user.email}
                   </td>
-                  <td className="px-4 py-2 text-slate-700 dark:text-slate-300">
+                  <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
                     {employee.department.name}
                   </td>
-                  <td className="px-4 py-2 text-slate-700 dark:text-slate-300">
+                  <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
                     {employee.position.title}
                   </td>
-                  <td className="px-4 py-2">
+                  <td className="px-4 py-3">
                     <StatusBadge status={employee.status} />
                   </td>
                 </tr>

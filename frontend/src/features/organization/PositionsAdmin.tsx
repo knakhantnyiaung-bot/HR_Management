@@ -89,7 +89,7 @@ export function PositionsAdmin() {
             e.preventDefault();
             createMutation.mutate();
           }}
-          className="mt-2 flex items-end gap-3 rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"
+          className="mt-2 flex items-end gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900"
         >
           <div className="flex-1">
             <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -121,7 +121,7 @@ export function PositionsAdmin() {
           <button
             type="submit"
             disabled={createMutation.isPending || !newTitle.trim() || !newDepartmentId}
-            className="rounded-md bg-indigo-600 hover:bg-indigo-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+            className="rounded-md bg-indigo-600 transition-colors hover:bg-indigo-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
           >
             {createMutation.isPending ? "Adding…" : "Add"}
           </button>
@@ -177,17 +177,17 @@ export function PositionsAdmin() {
       )}
 
       {data && (
-        <div className="mt-2 overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800">
+        <div className="mt-2 overflow-hidden rounded-lg border border-slate-200 shadow-sm dark:border-slate-800">
           <table className="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-800">
             <thead className="bg-slate-50 dark:bg-slate-900">
               <tr>
-                <th className="px-4 py-2 text-left font-medium text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Title
                 </th>
-                <th className="px-4 py-2 text-left font-medium text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Department
                 </th>
-                <th className="px-4 py-2 text-left font-medium text-slate-500 dark:text-slate-400">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Status
                 </th>
                 <th className="px-4 py-2" />
@@ -261,14 +261,14 @@ function PositionRow({
   if (isEditing) {
     return (
       <tr>
-        <td className="px-4 py-2">
+        <td className="px-4 py-3">
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className="w-full rounded-md border border-slate-300 px-2 py-1 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
           />
         </td>
-        <td className="px-4 py-2">
+        <td className="px-4 py-3">
           <select
             value={departmentId}
             onChange={(e) => setDepartmentId(e.target.value)}
@@ -281,10 +281,10 @@ function PositionRow({
             ))}
           </select>
         </td>
-        <td className="px-4 py-2">
+        <td className="px-4 py-3">
           <StatusBadge status={position.status} />
         </td>
-        <td className="px-4 py-2 text-right">
+        <td className="px-4 py-3 text-right">
           <div className="flex justify-end gap-3">
             <button
               type="button"
@@ -309,12 +309,12 @@ function PositionRow({
 
   return (
     <tr>
-      <td className="px-4 py-2 text-slate-900 dark:text-slate-100">{position.title}</td>
-      <td className="px-4 py-2 text-slate-700 dark:text-slate-300">{departmentName}</td>
-      <td className="px-4 py-2">
+      <td className="px-4 py-3 text-slate-900 dark:text-slate-100">{position.title}</td>
+      <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{departmentName}</td>
+      <td className="px-4 py-3">
         <StatusBadge status={position.status} />
       </td>
-      <td className="px-4 py-2 text-right">
+      <td className="px-4 py-3 text-right">
         <div className="flex justify-end gap-3">
           <button
             type="button"
