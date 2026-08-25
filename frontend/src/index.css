@@ -1,3 +1,131 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+ * Design tokens (elevation + page-background gradients). Colors, spacing
+ * and the type scale live in tailwind.config.js — these are the values
+ * that genuinely benefit from being real CSS variables: shadow recipes
+ * that need distinct light/dark treatments.
+ */
+:root {
+  --shadow-card: 0 1px 2px -1px rgb(15 23 42 / 0.06), 0 4px 10px -3px rgb(15 23 42 / 0.1);
+  --shadow-card-hover: 0 8px 20px -6px rgb(15 23 42 / 0.16), 0 2px 6px -2px rgb(15 23 42 / 0.08);
+  --shadow-button: 0 1px 2px 0 rgb(15 23 42 / 0.08), 0 4px 10px -2px rgb(70 56 224 / 0.35);
+  --shadow-popover: 0 12px 28px -8px rgb(15 23 42 / 0.22), 0 4px 10px -4px rgb(15 23 42 / 0.12);
+  /*
+   * Three soft corner glows in a triadic split off the brand indigo hue
+   * (245°) — 245°/5°/125°, evenly spaced around the wheel — laid out in a
+   * loose triangle (top-left / top-right / bottom-center) over a near-white
+   * base. Kept pale (L96) so page gutters read as a tinted backdrop, not a
+   * colored surface; content cards stay solid white on top.
+   */
+  --app-shell-gradient: radial-gradient(60% 50% at 8% 0%, #efeefc 0%, transparent 60%),
+    radial-gradient(55% 45% at 100% 8%, #fcefee 0%, transparent 60%),
+    radial-gradient(65% 55% at 45% 115%, #eefcef 0%, transparent 60%),
+    linear-gradient(180deg, #f8fafc 0%, #f8fafc 100%);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --shadow-card: 0 1px 2px -1px rgb(0 0 0 / 0.4), 0 4px 14px -4px rgb(0 0 0 / 0.5);
+    --shadow-card-hover: 0 10px 24px -6px rgb(0 0 0 / 0.6), 0 2px 8px -2px rgb(0 0 0 / 0.4);
+    --shadow-button: 0 1px 2px 0 rgb(0 0 0 / 0.4), 0 4px 14px -2px rgb(124 134 249 / 0.3);
+    --shadow-popover: 0 16px 32px -8px rgb(0 0 0 / 0.6), 0 4px 12px -4px rgb(0 0 0 / 0.5);
+    /* Same triad, deep and desaturated (S45/L10) against the near-black base. */
+    --app-shell-gradient: radial-gradient(60% 50% at 8% 0%, #100e25 0%, transparent 60%),
+      radial-gradient(55% 45% at 100% 8%, #25100e 0%, transparent 60%),
+      radial-gradient(65% 55% at 45% 115%, #0e2510 0%, transparent 60%),
+      linear-gradient(180deg, #020617 0%, #020617 100%);
+  }
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100;
+  }
+}
+
+@layer components {
+  /* Page framing */
+  .app-shell {
+    @apply min-h-screen bg-app-shell;
+  }
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+  .page-title {
+    @apply text-title text-slate-900 dark:text-slate-50;
+  }
+  .page-subtitle {
+    @apply mt-1 text-sm text-slate-500 dark:text-slate-400;
+  }
+
+  /* Surfaces */
+  .card {
+    @apply rounded-xl border border-slate-200/80 bg-white p-5 shadow-card dark:border-slate-800 dark:bg-slate-900;
+  }
+  .card-table {
+    @apply rounded-xl border border-slate-200/80 bg-white shadow-card dark:border-slate-800 dark:bg-slate-900;
+  }
+  .card-attention {
+    @apply border-l-4 border-l-warning-500 dark:border-l-warning-400;
+  }
+
+  /* Buttons */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg bg-indigo-600 px-3.5 py-2 text-sm font-medium text-white shadow-button transition-all duration-150 hover:bg-indigo-700 hover:shadow-md active:bg-indigo-800 active:shadow-none disabled:pointer-events-none disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:border-slate-400 hover:bg-slate-50 active:bg-slate-100 disabled:pointer-events-none disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800;
+  }
+  .btn-text {
+    @apply text-sm font-medium text-slate-500 transition-colors hover:text-slate-800 disabled:pointer-events-none disabled:opacity-50 dark:text-slate-400 dark:hover:text-slate-200;
+  }
+  .btn-text-danger {
+    @apply text-sm font-medium text-slate-500 transition-colors hover:text-danger-600 disabled:pointer-events-none disabled:opacity-50 dark:text-slate-400 dark:hover:text-danger-400;
+  }
+
+  /* Forms */
+  .label-field {
+    @apply mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300;
+  }
+  .input-field {
+    @apply rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm transition-colors placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/25 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500;
+  }
+  .input-field-inset {
+    @apply rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm transition-colors placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/25 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500;
+  }
+  .field-error-text {
+    @apply mt-1 text-xs text-danger-600 dark:text-danger-400;
+  }
+
+  /* Text + links */
+  .error-text {
+    @apply text-sm text-danger-600 dark:text-danger-400;
+  }
+  .link-accent {
+    @apply font-medium text-indigo-600 transition-colors hover:text-indigo-700 hover:underline dark:text-indigo-400 dark:hover:text-indigo-300;
+  }
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400;
+  }
+
+  /* Tables */
+  .table-head-cell {
+    @apply px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400;
+  }
+  .row-hover {
+    @apply transition-colors hover:bg-slate-50/80 dark:hover:bg-slate-800/40;
+  }
+}
