@@ -51,6 +51,11 @@ export function AppLayout() {
                   Leave
                 </NavLink>
               )}
+              {(isHrRole || user?.employee) && (
+                <NavLink to="/overtime" className={navLinkClass}>
+                  Overtime
+                </NavLink>
+              )}
             </nav>
           </div>
           <div className="flex items-center gap-4 text-sm">
