@@ -20,7 +20,9 @@ const ATTENDANCE_INCLUDE = {
 
 // HLD section 11: "Business date uses organization timezone." "en-CA" formats
 // as YYYY-MM-DD, which is exactly what we need for a @db.Date column.
-async function getBusinessDate(organizationId: string, at: Date): Promise<Date> {
+// Exported for the dashboard module, which needs the same "today" definition
+// for its present-today/on-leave-today aggregates.
+export async function getBusinessDate(organizationId: string, at: Date): Promise<Date> {
   const organization = await prisma.organization.findUniqueOrThrow({
     where: { id: organizationId },
     select: { timezone: true },
