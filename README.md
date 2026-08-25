@@ -1,5 +1,7 @@
 # HR & Payroll Management Platform
 
+[![CI](https://github.com/knakhantnyiaung-bot/HR_Management/actions/workflows/ci.yml/badge.svg)](https://github.com/knakhantnyiaung-bot/HR_Management/actions/workflows/ci.yml)
+
 Sprint 1 MVP. See `document/HR_Payroll_MVP_Sprint1_HLD.pdf` for the full High-Level Design.
 
 ## Stack
