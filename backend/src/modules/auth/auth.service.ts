@@ -5,10 +5,18 @@ import { prisma } from "@database/prisma";
 import { AppError } from "@common/errors/AppError";
 import type { LoginInput } from "@modules/auth/auth.schema";
 
+// Not a real user's hash — just a fixed, valid bcrypt hash to compare
+// against when there's no real one, so the not-found/inactive path pays the
+// same bcrypt cost as a wrong-password path instead of returning early.
+// Without this, response timing alone lets an attacker enumerate which
+// emails have accounts.
+const DUMMY_PASSWORD_HASH = "$2b$10$7T7vNwID.peQz/tOpfQ/n.18/T.YkEeIlX4YtKCmuw31S.O/41WoC";
+
 export async function authenticate({ email, password }: LoginInput) {
   const user = await prisma.user.findFirst({ where: { email } });
 
   if (!user || user.status !== "ACTIVE") {
+    await bcrypt.compare(password, DUMMY_PASSWORD_HASH);
     throw AppError.unauthorized("Invalid credentials");
   }
 

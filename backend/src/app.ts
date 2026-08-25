@@ -15,6 +15,7 @@ import { payrollRouter } from "@modules/payroll/payroll.routes";
 import { payslipsRouter } from "@modules/payslips/payslips.routes";
 import { dashboardRouter } from "@modules/dashboard/dashboard.routes";
 
+import { env } from "@config/env";
 import { errorHandler } from "@common/middleware/errorHandler";
 import { notFoundHandler } from "@common/middleware/notFound";
 
@@ -22,7 +23,9 @@ export function createApp() {
   const app = express();
 
   app.use(helmet());
-  app.use(cors());
+  // Restricted to a known allowlist (env.corsOrigin) rather than the
+  // `cors()` default of reflecting any origin — see config/env.ts.
+  app.use(cors({ origin: env.corsOrigin }));
   app.use(express.json());
   // Bearer tokens and cookies must never land in plaintext logs — anyone
   // with log read access could otherwise lift a live session and
