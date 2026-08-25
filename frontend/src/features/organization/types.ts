@@ -12,3 +12,12 @@ export interface Position {
   title: string;
   status: OrgStructureStatus;
 }
+
+export interface Organization {
+  id: string;
+  name: string;
+  timezone: string;
+  currency: string;
+  payrollCycle: string;
+  status: string;
+}

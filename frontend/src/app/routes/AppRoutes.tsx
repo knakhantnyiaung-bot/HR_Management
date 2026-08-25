@@ -10,6 +10,7 @@ import { EmployeeCreatePage } from "@/features/employees/EmployeeCreatePage";
 import { EmployeeDetailPage } from "@/features/employees/EmployeeDetailPage";
 import { EmployeesListPage } from "@/features/employees/EmployeesListPage";
 import { LeavePage } from "@/features/leave/LeavePage";
+import { SettingsPage } from "@/features/organization/SettingsPage";
 import { OvertimePage } from "@/features/overtime/OvertimePage";
 import { PayrollRunDetailPage } from "@/features/payroll/PayrollRunDetailPage";
 import { PayrollRunsListPage } from "@/features/payroll/PayrollRunsListPage";
@@ -39,6 +40,7 @@ export function AppRoutes() {
             <Route path="/employees/:id" element={<EmployeeDetailPage />} />
             <Route path="/payroll" element={<PayrollRunsListPage />} />
             <Route path="/payroll/:id" element={<PayrollRunDetailPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
           </Route>
 
           <Route path="/me" element={<EmployeeDashboardPage />} />

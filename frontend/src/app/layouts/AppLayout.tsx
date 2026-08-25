@@ -37,6 +37,9 @@ export function AppLayout() {
                   <NavLink to="/payroll" className={navLinkClass}>
                     Payroll
                   </NavLink>
+                  <NavLink to="/settings" className={navLinkClass}>
+                    Settings
+                  </NavLink>
                 </>
               )}
               {user?.employee && (
