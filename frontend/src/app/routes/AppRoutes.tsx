@@ -9,6 +9,7 @@ import { HrDashboardPage } from "@/features/dashboard/HrDashboardPage";
 import { EmployeeCreatePage } from "@/features/employees/EmployeeCreatePage";
 import { EmployeeDetailPage } from "@/features/employees/EmployeeDetailPage";
 import { EmployeesListPage } from "@/features/employees/EmployeesListPage";
+import { LeavePage } from "@/features/leave/LeavePage";
 
 export function AppRoutes() {
   return (
@@ -35,6 +36,7 @@ export function AppRoutes() {
 
           <Route path="/me" element={<EmployeeDashboardPage />} />
           <Route path="/attendance" element={<AttendanceListPage />} />
+          <Route path="/leave" element={<LeavePage />} />
         </Route>
       </Route>
 

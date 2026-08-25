@@ -46,6 +46,11 @@ export function AppLayout() {
                   Attendance
                 </NavLink>
               )}
+              {(isHrRole || user?.employee) && (
+                <NavLink to="/leave" className={navLinkClass}>
+                  Leave
+                </NavLink>
+              )}
             </nav>
           </div>
           <div className="flex items-center gap-4 text-sm">
