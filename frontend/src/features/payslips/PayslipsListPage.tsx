@@ -118,7 +118,7 @@ export function PayslipsListPage() {
                   <td className="px-4 py-2">
                     <Link
                       to={`/payslips/${payslip.id}`}
-                      className="font-medium text-slate-900 hover:underline dark:text-slate-100"
+                      className="font-medium text-indigo-600 hover:underline dark:text-indigo-400"
                     >
                       {payslip.payrollItem.payrollRun.period}
                     </Link>

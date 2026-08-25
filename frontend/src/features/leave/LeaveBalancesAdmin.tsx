@@ -110,7 +110,7 @@ export function LeaveBalancesAdmin() {
             <button
               type="submit"
               disabled={grantMutation.isPending}
-              className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900"
+              className="rounded-md bg-indigo-600 hover:bg-indigo-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
             >
               {grantMutation.isPending ? "Saving…" : "Grant"}
             </button>

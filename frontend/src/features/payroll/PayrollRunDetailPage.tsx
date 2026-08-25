@@ -74,7 +74,7 @@ export function PayrollRunDetailPage() {
             type="button"
             onClick={() => approveMutation.mutate()}
             disabled={isActionPending}
-            className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900"
+            className="rounded-md bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
           >
             {approveMutation.isPending ? "Approving…" : "Approve"}
           </button>
@@ -89,7 +89,7 @@ export function PayrollRunDetailPage() {
             type="button"
             onClick={() => markPaidMutation.mutate()}
             disabled={isActionPending}
-            className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900"
+            className="rounded-md bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
           >
             {markPaidMutation.isPending ? "Marking paid…" : "Mark as paid"}
           </button>

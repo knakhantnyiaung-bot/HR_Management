@@ -3,8 +3,8 @@ import { useAuth } from "@/features/auth/AuthContext";
 
 function navLinkClass({ isActive }: { isActive: boolean }): string {
   return isActive
-    ? "font-medium text-slate-900 dark:text-slate-100"
-    : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100";
+    ? "font-medium text-indigo-600 dark:text-indigo-400"
+    : "text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400";
 }
 
 export function AppLayout() {
@@ -22,7 +22,8 @@ export function AppLayout() {
       <header className="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
           <div className="flex items-center gap-6">
-            <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+            <span className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
+              <span className="h-2 w-2 rounded-full bg-indigo-600 dark:bg-indigo-400" aria-hidden="true" />
               HR &amp; Payroll
             </span>
             <nav className="flex items-center gap-4 text-sm">
