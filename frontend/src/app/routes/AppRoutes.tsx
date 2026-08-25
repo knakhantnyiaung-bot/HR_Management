@@ -3,6 +3,7 @@ import { AppLayout } from "@/app/layouts/AppLayout";
 import { ProtectedRoute, PublicOnlyRoute } from "@/app/routes/ProtectedRoute";
 import { RoleBasedHome } from "@/app/routes/RoleBasedHome";
 import { LoginPage } from "@/features/auth/LoginPage";
+import { AttendanceListPage } from "@/features/attendance/AttendanceListPage";
 import { EmployeeDashboardPage } from "@/features/dashboard/EmployeeDashboardPage";
 import { HrDashboardPage } from "@/features/dashboard/HrDashboardPage";
 import { EmployeeCreatePage } from "@/features/employees/EmployeeCreatePage";
@@ -33,6 +34,7 @@ export function AppRoutes() {
           </Route>
 
           <Route path="/me" element={<EmployeeDashboardPage />} />
+          <Route path="/attendance" element={<AttendanceListPage />} />
         </Route>
       </Route>
 

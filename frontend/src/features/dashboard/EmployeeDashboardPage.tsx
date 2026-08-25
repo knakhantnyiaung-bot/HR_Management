@@ -1,14 +1,25 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { StatTile } from "@/components/StatTile";
 import { fetchEmployeeDashboard } from "@/features/dashboard/api";
+import { checkIn, checkOut } from "@/features/attendance/api";
 import { formatMoney, formatDateTime, formatTime } from "@/lib/format";
 import { getApiErrorMessage } from "@/lib/api/client";
 
 export function EmployeeDashboardPage() {
+  const queryClient = useQueryClient();
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["dashboard", "me"],
     queryFn: fetchEmployeeDashboard,
   });
+
+  function invalidate() {
+    queryClient.invalidateQueries({ queryKey: ["dashboard", "me"] });
+    queryClient.invalidateQueries({ queryKey: ["attendance"] });
+  }
+
+  const checkInMutation = useMutation({ mutationFn: checkIn, onSuccess: invalidate });
+  const checkOutMutation = useMutation({ mutationFn: checkOut, onSuccess: invalidate });
+  const attendanceError = checkInMutation.error ?? checkOutMutation.error;
 
   return (
     <div>
@@ -39,6 +50,32 @@ export function EmployeeDashboardPage() {
                 </p>
               ) : (
                 <p className="mt-1 text-sm text-slate-400 dark:text-slate-500">Not checked in yet</p>
+              )}
+              <div className="mt-3">
+                {!data.attendanceToday || data.attendanceToday.checkOut ? (
+                  <button
+                    type="button"
+                    onClick={() => checkInMutation.mutate()}
+                    disabled={checkInMutation.isPending}
+                    className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900"
+                  >
+                    {checkInMutation.isPending ? "Checking in…" : "Check in"}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => checkOutMutation.mutate()}
+                    disabled={checkOutMutation.isPending}
+                    className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 disabled:opacity-50 dark:border-slate-700 dark:text-slate-200"
+                  >
+                    {checkOutMutation.isPending ? "Checking out…" : "Check out"}
+                  </button>
+                )}
+              </div>
+              {attendanceError && (
+                <p className="mt-2 text-xs text-rose-600 dark:text-rose-400">
+                  {getApiErrorMessage(attendanceError, "That action failed.")}
+                </p>
               )}
             </div>
             <StatTile label="Pending leave requests" value={data.pendingRequests.leave} />

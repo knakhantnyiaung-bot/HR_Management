@@ -1,4 +1,5 @@
 import { apiClient, type ApiSuccess } from "@/lib/api/client";
+import type { ListResult } from "@/lib/api/types";
 import type {
   CreateEmployeeResult,
   EmployeeStatus,
@@ -6,11 +7,6 @@ import type {
   SalaryProfile,
   WorkModel,
 } from "@/features/employees/types";
-
-export interface ListResult<T> {
-  items: T[];
-  meta: { page: number; pageSize: number; total: number };
-}
 
 export interface ListEmployeesParams {
   page: number;
