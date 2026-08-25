@@ -46,3 +46,7 @@ Each backend module (`auth`, `organizations`, `departments`, `positions`, `emplo
 `attendance`, `leave`, `overtime`, `salary`, `payroll`, `payslips`, `dashboard`, `audit`)
 follows: `controller → service → repository`. Business rules live in services; controllers
 only handle HTTP; repositories only handle persistence.
+
+## License
+
+[MIT](LICENSE)
