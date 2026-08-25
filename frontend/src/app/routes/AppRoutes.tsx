@@ -13,6 +13,8 @@ import { LeavePage } from "@/features/leave/LeavePage";
 import { OvertimePage } from "@/features/overtime/OvertimePage";
 import { PayrollRunDetailPage } from "@/features/payroll/PayrollRunDetailPage";
 import { PayrollRunsListPage } from "@/features/payroll/PayrollRunsListPage";
+import { PayslipDetailPage } from "@/features/payslips/PayslipDetailPage";
+import { PayslipsListPage } from "@/features/payslips/PayslipsListPage";
 
 export function AppRoutes() {
   return (
@@ -43,6 +45,8 @@ export function AppRoutes() {
           <Route path="/attendance" element={<AttendanceListPage />} />
           <Route path="/leave" element={<LeavePage />} />
           <Route path="/overtime" element={<OvertimePage />} />
+          <Route path="/payslips" element={<PayslipsListPage />} />
+          <Route path="/payslips/:id" element={<PayslipDetailPage />} />
         </Route>
       </Route>
 
