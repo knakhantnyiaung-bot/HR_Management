@@ -24,7 +24,21 @@ export function createApp() {
   app.use(helmet());
   app.use(cors());
   app.use(express.json());
-  app.use(pinoHttp());
+  // Bearer tokens and cookies must never land in plaintext logs — anyone
+  // with log read access could otherwise lift a live session and
+  // impersonate that user until the token expires.
+  app.use(
+    pinoHttp({
+      redact: {
+        paths: [
+          "req.headers.authorization",
+          "req.headers.cookie",
+          "res.headers['set-cookie']",
+        ],
+        censor: "[Redacted]",
+      },
+    }),
+  );
 
   app.get("/health", (_req, res) => {
     res.json({ success: true, data: { status: "ok" } });
