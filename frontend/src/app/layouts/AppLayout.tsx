@@ -27,9 +27,14 @@ export function AppLayout() {
             </span>
             <nav className="flex items-center gap-4 text-sm">
               {isHrRole && (
-                <NavLink to="/dashboard" className={navLinkClass}>
-                  HR Dashboard
-                </NavLink>
+                <>
+                  <NavLink to="/dashboard" className={navLinkClass}>
+                    HR Dashboard
+                  </NavLink>
+                  <NavLink to="/employees" className={navLinkClass}>
+                    Employees
+                  </NavLink>
+                </>
               )}
               {user?.employee && (
                 <NavLink to="/me" className={navLinkClass}>
