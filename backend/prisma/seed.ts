@@ -45,8 +45,23 @@ async function main() {
     },
   });
 
+  const superAdminPasswordHash = await bcrypt.hash("SuperPassword123!", 10);
+
+  await prisma.user.upsert({
+    where: { organizationId_email: { organizationId: organization.id, email: "super.admin@demo.local" } },
+    update: { passwordHash: superAdminPasswordHash },
+    create: {
+      organizationId: organization.id,
+      email: "super.admin@demo.local",
+      passwordHash: superAdminPasswordHash,
+      role: "SUPER_ADMIN",
+    },
+  });
+
   // eslint-disable-next-line no-console
   console.log("Seed complete. HR admin login: hr.admin@demo.local / ChangeMe123!");
+  // eslint-disable-next-line no-console
+  console.log("Seed complete. Super admin login: super.admin@demo.local / SuperPassword123!");
 }
 
 main()
