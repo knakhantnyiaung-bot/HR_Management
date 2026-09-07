@@ -6,8 +6,10 @@ Sprint 1 MVP, extended in Sprint 2 with geofenced attendance, expense claims,
 notifications, and recruitment/ATS. See:
 
 - `document/HR_Payroll_MVP_Sprint1_HLD.pdf` — Sprint 1 High-Level Design
+- `document/HR_Payroll_Sprint1_MVP_Developer_Handbook_v1.1.pdf` — Sprint 1 developer handbook
 - `document/HR_Payroll_User_Handbook.pdf` — Sprint 1 end-user handbook
 - `document/HR_Payroll_Sprint2_HLD.pdf` — Sprint 2 High-Level Design
+- `document/HR_Payroll_Sprint2_Developer_Handbook.pdf` — Sprint 2 developer handbook
 - `document/HR_Payroll_Sprint2_User_Handbook.pdf` — Sprint 2 end-user handbook
 
 ## Stack
