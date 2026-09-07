@@ -2,7 +2,13 @@
 
 [![CI](https://github.com/knakhantnyiaung-bot/HR_Management/actions/workflows/ci.yml/badge.svg)](https://github.com/knakhantnyiaung-bot/HR_Management/actions/workflows/ci.yml)
 
-Sprint 1 MVP. See `document/HR_Payroll_MVP_Sprint1_HLD.pdf` for the full High-Level Design.
+Sprint 1 MVP, extended in Sprint 2 with geofenced attendance, expense claims,
+notifications, and recruitment/ATS. See:
+
+- `document/HR_Payroll_MVP_Sprint1_HLD.pdf` — Sprint 1 High-Level Design
+- `document/HR_Payroll_User_Handbook.pdf` — Sprint 1 end-user handbook
+- `document/HR_Payroll_Sprint2_HLD.pdf` — Sprint 2 High-Level Design
+- `document/HR_Payroll_Sprint2_User_Handbook.pdf` — Sprint 2 end-user handbook
 
 ## Stack
 
@@ -21,7 +27,7 @@ no local Node install needed.
 docker compose up -d --build
 ```
 
-- Frontend: `http://localhost:5173`
+- Frontend: `http://localhost:5174`
 - Backend: `http://localhost:4000` (health check at `/health`)
 - Postgres: `localhost:5432`
 
