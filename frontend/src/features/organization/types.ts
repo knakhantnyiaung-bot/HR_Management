@@ -20,4 +20,6 @@ export interface Organization {
   currency: string;
   payrollCycle: string;
   status: string;
+  careersSlug: string | null;
+  careersEnabled: boolean;
 }

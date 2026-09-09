@@ -31,6 +31,8 @@ export interface UpdateOrganizationInput {
   timezone?: string;
   currency?: string;
   payrollCycle?: string;
+  careersSlug?: string | null;
+  careersEnabled?: boolean;
 }
 
 export async function updateOrganization(input: UpdateOrganizationInput): Promise<Organization> {

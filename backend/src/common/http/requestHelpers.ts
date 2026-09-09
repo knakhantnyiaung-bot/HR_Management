@@ -1,5 +1,6 @@
 import type { Request } from "express";
 import type { AuthContext } from "@common/auth/requireAuth";
+import type { CandidateAuthContext } from "@common/auth/requireCandidateAuth";
 import { AppError } from "@common/errors/AppError";
 
 export function requireAuthContext(req: Request): AuthContext {
@@ -7,6 +8,13 @@ export function requireAuthContext(req: Request): AuthContext {
     throw AppError.unauthorized();
   }
   return req.auth;
+}
+
+export function requireCandidateAuthContext(req: Request): CandidateAuthContext {
+  if (!req.candidateAuth) {
+    throw AppError.unauthorized();
+  }
+  return req.candidateAuth;
 }
 
 export function requireParam(req: Request, name: string): string {

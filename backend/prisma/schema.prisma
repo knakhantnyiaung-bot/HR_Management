@@ -172,6 +172,12 @@ model Organization {
   // exactly), GEOFENCE_ENFORCED = new hard rejection for OFFICE employees.
   locationPolicy LocationPolicy @default(LOG_ONLY) @map("location_policy")
   status         String         @default("ACTIVE")
+  // CAREER-01/09 — opt-in public careers page. No careersSlug means no
+  // public page at all (404), not an empty one — an org that existed
+  // before Sprint 3 isn't unexpectedly exposed. Super Admin sets both via
+  // PATCH /organization.
+  careersSlug    String?        @unique @map("careers_slug")
+  careersEnabled Boolean        @default(false) @map("careers_enabled")
   createdAt      DateTime       @default(now()) @map("created_at")
   updatedAt      DateTime       @updatedAt @map("updated_at")
 
@@ -752,12 +758,38 @@ model Candidate {
   createdAt           DateTime @default(now()) @map("created_at")
   updatedAt           DateTime @updatedAt @map("updated_at")
 
-  organization Organization           @relation(fields: [organizationId], references: [id])
-  applications CandidateApplication[]
+  organization  Organization            @relation(fields: [organizationId], references: [id])
+  applications  CandidateApplication[]
+  portalAccount CandidatePortalAccount?
 
   @@index([organizationId])
   @@index([organizationId, email])
   @@map("candidates")
+}
+
+// CAREER-03/04 — a Candidate can exist without a portal account (Sprint 2's
+// HR-entered candidates stay valid); this row is only created the first
+// time someone registers through the public careers flow. Deliberately not
+// a User: candidate identity/auth (careers.service.ts, requireCandidateAuth)
+// is fully separate from internal RBAC, signed with its own JWT secret —
+// see Sprint 3 HLD §3.
+enum CandidatePortalStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model CandidatePortalAccount {
+  id           String                @id @default(uuid())
+  candidateId  String                @unique @map("candidate_id")
+  passwordHash String                @map("password_hash")
+  status       CandidatePortalStatus @default(ACTIVE)
+  lastLoginAt  DateTime?             @map("last_login_at")
+  createdAt    DateTime              @default(now()) @map("created_at")
+  updatedAt    DateTime              @updatedAt @map("updated_at")
+
+  candidate Candidate @relation(fields: [candidateId], references: [id])
+
+  @@map("candidate_portal_accounts")
 }
 
 // REC-02/REC-03 — forward-only stage machine, terminal REJECTED/WITHDRAWN

@@ -35,6 +35,12 @@ export const env = {
   // this repo's own .env.example.
   jwtSecret: required("JWT_SECRET"),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? "8h",
+  // CAREER-03/04 — distinct from JWT_SECRET on purpose (HLD §3): a
+  // candidate token must be structurally incapable of passing requireAuth,
+  // not just logically separate via a claim check. Same fail-fast rule as
+  // JWT_SECRET — no insecure fallback.
+  candidateJwtSecret: required("CANDIDATE_JWT_SECRET"),
+  candidateJwtExpiresIn: process.env.CANDIDATE_JWT_EXPIRES_IN ?? "8h",
   corsOrigin: corsOrigin(),
   defaultTimezone: process.env.DEFAULT_TIMEZONE ?? "Asia/Yangon",
   defaultCurrency: process.env.DEFAULT_CURRENCY ?? "MMK",

@@ -22,6 +22,12 @@ import { NotificationsPage } from "@/features/notifications/NotificationsPage";
 import { ExpensesPage } from "@/features/expenses/ExpensesPage";
 import { RecruitmentPage } from "@/features/recruitment/RecruitmentPage";
 import { ApplicationDetailPage } from "@/features/recruitment/ApplicationDetailPage";
+import { CareersJobsPage } from "@/features/careers/CareersJobsPage";
+import { CareersJobDetailPage } from "@/features/careers/CareersJobDetailPage";
+import { CareersAuthPage } from "@/features/careers/CareersAuthPage";
+import { CandidatePortalPage } from "@/features/careers/CandidatePortalPage";
+import { CandidateApplicationDetailPage } from "@/features/careers/CandidateApplicationDetailPage";
+import { CandidateProtectedRoute } from "@/features/careers/CandidateProtectedRoute";
 
 export function AppRoutes() {
   return (
@@ -34,6 +40,19 @@ export function AppRoutes() {
           </PublicOnlyRoute>
         }
       />
+
+      {/* Sprint 3 Wave 1 — public careers page + candidate portal. Fully
+          outside ProtectedRoute/AppLayout: this is a separate identity
+          system (Sprint 3 HLD §3), not an internal-user surface. */}
+      <Route path="/careers/:orgSlug" element={<CareersJobsPage />} />
+      <Route path="/careers/:orgSlug/jobs/:jobId" element={<CareersJobDetailPage />} />
+      <Route path="/careers/:orgSlug/login" element={<CareersAuthPage mode="login" />} />
+      <Route path="/careers/:orgSlug/register" element={<CareersAuthPage mode="register" />} />
+
+      <Route element={<CandidateProtectedRoute />}>
+        <Route path="/candidate-portal" element={<CandidatePortalPage />} />
+        <Route path="/candidate-portal/applications/:id" element={<CandidateApplicationDetailPage />} />
+      </Route>
 
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>

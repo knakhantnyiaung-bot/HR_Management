@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@database/prisma";
 import { AppError } from "@common/errors/AppError";
 import { recordAudit } from "@modules/audit/audit.service";
@@ -27,21 +27,29 @@ export async function updateOrganization(
     }
   }
 
-  return prisma.$transaction(async (tx) => {
-    const updated = await tx.organization.update({ where: { id: organizationId }, data: input });
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const updated = await tx.organization.update({ where: { id: organizationId }, data: input });
 
-    await recordAudit(
-      {
-        organizationId,
-        actorId,
-        action: "ORGANIZATION_UPDATED",
-        resourceType: "Organization",
-        resourceId: organizationId,
-        metadata: input as Prisma.InputJsonValue,
-      },
-      tx,
-    );
+      await recordAudit(
+        {
+          organizationId,
+          actorId,
+          action: "ORGANIZATION_UPDATED",
+          resourceType: "Organization",
+          resourceId: organizationId,
+          metadata: input as Prisma.InputJsonValue,
+        },
+        tx,
+      );
 
-    return updated;
-  });
+      return updated;
+    });
+  } catch (err) {
+    // CAREER-09 — careersSlug is globally unique across organizations.
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+      throw AppError.conflict("CAREERS_SLUG_ALREADY_EXISTS", "This careers page URL is already taken");
+    }
+    throw err;
+  }
 }

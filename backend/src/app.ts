@@ -21,6 +21,7 @@ import {
 } from "@modules/notifications/notifications.routes";
 import { expensesRouter } from "@modules/expenses/expenses.routes";
 import { recruitmentRouter } from "@modules/recruitment/recruitment.routes";
+import { candidatePortalRouter, careersRouter } from "@modules/careers/careers.routes";
 
 import { env } from "@config/env";
 import { errorHandler } from "@common/middleware/errorHandler";
@@ -73,6 +74,11 @@ export function createApp() {
   v1.use("/notification-preferences", notificationPreferencesRouter);
   v1.use("/expenses", expensesRouter);
   v1.use("/recruitment", recruitmentRouter);
+  // Sprint 3 Wave 1 — careersRouter is fully public (no requireAuth
+  // anywhere in it); candidatePortalRouter uses requireCandidateAuth, a
+  // separate auth system from everything else mounted here.
+  v1.use("/careers", careersRouter);
+  v1.use("/candidate-portal", candidatePortalRouter);
 
   app.use("/api/v1", v1);
 
