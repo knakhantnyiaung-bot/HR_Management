@@ -2,10 +2,11 @@ import { prisma } from "@database/prisma";
 import { AppError } from "@common/errors/AppError";
 import type {
   ListNotificationsQuery,
+  RegisterPushSubscriptionInput,
   UpdateNotificationPreferenceInput,
 } from "@modules/notifications/notifications.schema";
 
-// NOTIF-05 — in-app delivery is always on; only email is user-toggleable.
+// NOTIF-05 — in-app delivery is always on; email/SMS/push are user-toggleable.
 export async function listNotifications(
   organizationId: string,
   userId: string,
@@ -54,7 +55,35 @@ export async function upsertNotificationPreference(
 ) {
   return prisma.notificationPreference.upsert({
     where: { userId_eventType: { userId, eventType: input.eventType } },
-    create: { userId, eventType: input.eventType, emailEnabled: input.emailEnabled },
-    update: { emailEnabled: input.emailEnabled },
+    create: {
+      userId,
+      eventType: input.eventType,
+      emailEnabled: input.emailEnabled ?? true,
+      smsEnabled: input.smsEnabled ?? true,
+      pushEnabled: input.pushEnabled ?? true,
+    },
+    update: {
+      ...(input.emailEnabled !== undefined ? { emailEnabled: input.emailEnabled } : {}),
+      ...(input.smsEnabled !== undefined ? { smsEnabled: input.smsEnabled } : {}),
+      ...(input.pushEnabled !== undefined ? { pushEnabled: input.pushEnabled } : {}),
+    },
   });
+}
+
+// NOTIF-08..13 — registering an already-known (userId, endpoint) pair just
+// refreshes it; a browser can re-subscribe with the same endpoint (e.g.
+// after clearing permission state) without creating a duplicate row.
+export async function registerPushSubscription(
+  userId: string,
+  input: RegisterPushSubscriptionInput,
+) {
+  return prisma.pushSubscription.upsert({
+    where: { userId_endpoint: { userId, endpoint: input.endpoint } },
+    create: { userId, endpoint: input.endpoint, p256dh: input.keys.p256dh, auth: input.keys.auth },
+    update: { p256dh: input.keys.p256dh, auth: input.keys.auth },
+  });
+}
+
+export async function removePushSubscription(userId: string, endpoint: string) {
+  await prisma.pushSubscription.deleteMany({ where: { userId, endpoint } });
 }

@@ -13,7 +13,7 @@ describe("auth module", () => {
   let positionId: string;
   let hrToken: string;
 
-  function authed(method: "get" | "post", path: string, token: string) {
+  function authed(method: "get" | "post" | "patch", path: string, token: string) {
     return request(app)[method](path).set("Authorization", `Bearer ${token}`);
   }
 
@@ -108,5 +108,22 @@ describe("auth module", () => {
 
     const after = await authed("get", "/api/v1/auth/me", employeeToken);
     expect(after.status).toBe(401);
+  });
+
+  it("sets, clears, and validates the self-service phone number (NOTIF-08..13)", async () => {
+    const invalid = await authed("patch", "/api/v1/auth/me", hrToken).send({
+      phoneNumber: "not-a-phone-number",
+    });
+    expect(invalid.status).toBe(400);
+
+    const set = await authed("patch", "/api/v1/auth/me", hrToken).send({
+      phoneNumber: "+959123456789",
+    });
+    expect(set.status).toBe(200);
+    expect(set.body.data.phoneNumber).toBe("+959123456789");
+
+    const cleared = await authed("patch", "/api/v1/auth/me", hrToken).send({ phoneNumber: null });
+    expect(cleared.status).toBe(200);
+    expect(cleared.body.data.phoneNumber).toBeNull();
   });
 });

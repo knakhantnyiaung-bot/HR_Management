@@ -31,13 +31,33 @@ export async function listNotificationPreferences(): Promise<NotificationPrefere
   return res.data.data;
 }
 
+export type NotificationChannel = "emailEnabled" | "smsEnabled" | "pushEnabled";
+
 export async function updateNotificationPreference(
   eventType: string,
-  emailEnabled: boolean,
+  channel: NotificationChannel,
+  enabled: boolean,
 ): Promise<NotificationPreference> {
   const res = await apiClient.patch<ApiSuccess<NotificationPreference>>("/notification-preferences", {
     eventType,
-    emailEnabled,
+    [channel]: enabled,
   });
   return res.data.data;
+}
+
+// NOTIF-08..13 — push subscription management.
+export async function getPushPublicKey(): Promise<string> {
+  const res = await apiClient.get<ApiSuccess<{ publicKey: string }>>("/notifications/push-public-key");
+  return res.data.data.publicKey;
+}
+
+export async function registerPushSubscription(subscription: PushSubscriptionJSON): Promise<void> {
+  await apiClient.post("/notifications/push-subscription", {
+    endpoint: subscription.endpoint,
+    keys: subscription.keys,
+  });
+}
+
+export async function removePushSubscription(endpoint: string): Promise<void> {
+  await apiClient.delete("/notifications/push-subscription", { data: { endpoint } });
 }

@@ -32,6 +32,7 @@ services:
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5174}
       DEFAULT_TIMEZONE: ${DEFAULT_TIMEZONE:-Asia/Yangon}
       DEFAULT_CURRENCY: ${DEFAULT_CURRENCY:-MMK}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
     ports:
       - "4000:4000"
     depends_on:

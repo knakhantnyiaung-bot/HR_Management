@@ -201,6 +201,11 @@ model User {
   passwordHash   String     @map("password_hash")
   role           UserRole   @default(EMPLOYEE)
   status         UserStatus @default(ACTIVE)
+  // NOTIF-08..13 — SMS delivery target, E.164 (e.g. +959123456789).
+  // Self-service via PATCH /auth/me; lives on User (not Employee) so
+  // HR Admin/Super Admin/Hiring Manager accounts without an Employee row
+  // can still set one.
+  phoneNumber    String?    @map("phone_number")
   createdAt      DateTime   @default(now()) @map("created_at")
   updatedAt      DateTime   @updatedAt @map("updated_at")
 
@@ -209,6 +214,7 @@ model User {
   auditLogs                 AuditLog[]
   notifications             Notification[]
   notificationPreferences   NotificationPreference[]
+  pushSubscriptions         PushSubscription[]
   hiringManagerApplications CandidateApplication[]
 
   @@unique([organizationId, email])
@@ -597,11 +603,35 @@ model NotificationPreference {
   userId       String  @map("user_id")
   eventType    String  @map("event_type")
   emailEnabled Boolean @default(true) @map("email_enabled")
+  // NOTIF-08..13 — same per-user/per-event-type opt-out shape as
+  // emailEnabled. In-app delivery is still never disableable (no
+  // inAppEnabled column, per NOTIF-05).
+  smsEnabled   Boolean @default(true) @map("sms_enabled")
+  pushEnabled  Boolean @default(true) @map("push_enabled")
 
   user User @relation(fields: [userId], references: [id])
 
   @@unique([userId, eventType])
   @@map("notification_preferences")
+}
+
+// NOTIF-08..13 — a browser Web Push subscription (endpoint + encryption
+// keys), one row per device/browser a user has enabled push on. Delivery
+// itself goes through PushProvider (backend/src/common/notifications/) —
+// this table only tracks who to deliver to.
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  endpoint  String
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, endpoint])
+  @@index([userId])
+  @@map("push_subscriptions")
 }
 
 // ---------------------------------------------------------------------------

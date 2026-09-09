@@ -2,9 +2,12 @@ import { Router } from "express";
 import { requireAuth } from "@common/auth/requireAuth";
 import { asyncHandler } from "@common/middleware/asyncHandler";
 import {
+  getPushPublicKeyHandler,
   listNotificationPreferencesHandler,
   listNotificationsHandler,
   markNotificationReadHandler,
+  registerPushSubscriptionHandler,
+  removePushSubscriptionHandler,
   updateNotificationPreferenceHandler,
 } from "@modules/notifications/notifications.controller";
 
@@ -15,6 +18,19 @@ export const notificationsRouter = Router();
 
 notificationsRouter.get("/", requireAuth, asyncHandler(listNotificationsHandler));
 notificationsRouter.patch("/:id/read", requireAuth, asyncHandler(markNotificationReadHandler));
+
+// NOTIF-08..13 — push subscription management, own-device scoped.
+notificationsRouter.get("/push-public-key", requireAuth, asyncHandler(getPushPublicKeyHandler));
+notificationsRouter.post(
+  "/push-subscription",
+  requireAuth,
+  asyncHandler(registerPushSubscriptionHandler),
+);
+notificationsRouter.delete(
+  "/push-subscription",
+  requireAuth,
+  asyncHandler(removePushSubscriptionHandler),
+);
 
 export const notificationPreferencesRouter = Router();
 

@@ -1,5 +1,7 @@
 import { NotificationEventStatus, type NotificationEvent } from "@prisma/client";
 import { prisma } from "@database/prisma";
+import { smsProvider } from "@common/notifications/smsProvider";
+import { pushProvider } from "@common/notifications/pushProvider";
 import { renderNotification } from "@modules/notifications/notification.templates";
 
 // Sprint 2 plan's infra deviation note: the HLD (§12.1, ADR-011/012) calls
@@ -37,6 +39,18 @@ function sendEmailStub(userId: string, subject: string, body: string): void {
   console.log(`[email stub] to user ${userId}: ${subject} — ${body}`);
 }
 
+// NOTIF-08..13 — a channel send failure (real SMS/push vendor, once wired
+// in) must never fail the whole event: other channels for this recipient,
+// and every other recipient, still need to go out. Logged, not re-thrown.
+async function sendChannelSafely(channel: string, userId: string, send: () => Promise<void>) {
+  try {
+    await send();
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error(`[notifications] ${channel} send failed for user ${userId}`, err);
+  }
+}
+
 // NOTIF-03 — processing one event (render, create in-app rows, "send"
 // email, mark PROCESSED) happens inside a single transaction with a status
 // re-check, so a re-processed event id can never duplicate in-app rows.
@@ -57,12 +71,22 @@ export async function processOneEvent(event: NotificationEvent): Promise<void> {
       }
 
       if (recipientUserIds.length > 0) {
-        const preferences = await tx.notificationPreference.findMany({
-          where: { userId: { in: recipientUserIds }, eventType: event.eventType },
-        });
+        const [preferences, recipients, pushSubscriptions] = await Promise.all([
+          tx.notificationPreference.findMany({
+            where: { userId: { in: recipientUserIds }, eventType: event.eventType },
+          }),
+          tx.user.findMany({
+            where: { id: { in: recipientUserIds } },
+            select: { id: true, phoneNumber: true },
+          }),
+          tx.pushSubscription.findMany({ where: { userId: { in: recipientUserIds } } }),
+        ]);
         const emailDisabled = new Set(
           preferences.filter((p) => !p.emailEnabled).map((p) => p.userId),
         );
+        const smsDisabled = new Set(preferences.filter((p) => !p.smsEnabled).map((p) => p.userId));
+        const pushDisabled = new Set(preferences.filter((p) => !p.pushEnabled).map((p) => p.userId));
+        const phoneByUserId = new Map(recipients.map((r) => [r.id, r.phoneNumber]));
 
         await tx.notification.createMany({
           data: recipientUserIds.map((userId) => ({
@@ -79,6 +103,19 @@ export async function processOneEvent(event: NotificationEvent): Promise<void> {
         for (const userId of recipientUserIds) {
           if (!emailDisabled.has(userId)) {
             sendEmailStub(userId, rendered.title, rendered.emailBody);
+          }
+
+          const phoneNumber = phoneByUserId.get(userId);
+          if (!smsDisabled.has(userId) && phoneNumber) {
+            await sendChannelSafely("sms", userId, () => smsProvider.send(phoneNumber, rendered.smsBody));
+          }
+
+          if (!pushDisabled.has(userId)) {
+            for (const subscription of pushSubscriptions.filter((s) => s.userId === userId)) {
+              await sendChannelSafely("push", userId, () =>
+                pushProvider.send(subscription, rendered.title, rendered.emailBody),
+              );
+            }
           }
         }
       }

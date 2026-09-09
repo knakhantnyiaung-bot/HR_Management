@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import { env } from "@config/env";
 import { prisma } from "@database/prisma";
 import { AppError } from "@common/errors/AppError";
-import type { LoginInput } from "@modules/auth/auth.schema";
+import type { LoginInput, UpdateMeInput } from "@modules/auth/auth.schema";
 
 // Not a real user's hash — just a fixed, valid bcrypt hash to compare
 // against when there's no real one, so the not-found/inactive path pays the
@@ -37,7 +37,14 @@ export async function authenticate({ email, password }: LoginInput) {
 export async function getCurrentUser(userId: string) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, email: true, role: true, organizationId: true, employee: true },
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      organizationId: true,
+      phoneNumber: true,
+      employee: true,
+    },
   });
 
   if (!user) {
@@ -45,4 +52,21 @@ export async function getCurrentUser(userId: string) {
   }
 
   return user;
+}
+
+// NOTIF-08..13 — the only self-editable field on a User today. `undefined`
+// (key omitted) leaves the current value alone; `null` clears it.
+export async function updateCurrentUser(userId: string, input: UpdateMeInput) {
+  return prisma.user.update({
+    where: { id: userId },
+    data: { phoneNumber: input.phoneNumber },
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      organizationId: true,
+      phoneNumber: true,
+      employee: true,
+    },
+  });
 }

@@ -38,4 +38,11 @@ export const env = {
   corsOrigin: corsOrigin(),
   defaultTimezone: process.env.DEFAULT_TIMEZONE ?? "Asia/Yangon",
   defaultCurrency: process.env.DEFAULT_CURRENCY ?? "MMK",
+  // NOTIF-08..13 — optional: the browser Push API's subscribe() call needs
+  // a valid applicationServerKey even though delivery is a console stub in
+  // Wave 1 (see PushProvider). No fallback — if unset, the frontend's
+  // push-subscription endpoint 404s and push notifications are simply
+  // unavailable for this deployment, same "opt-in feature, not required to
+  // run the app" treatment as calendar/bank integrations in later waves.
+  vapidPublicKey: process.env.VAPID_PUBLIC_KEY,
 };

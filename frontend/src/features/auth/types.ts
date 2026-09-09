@@ -8,5 +8,6 @@ export interface AuthUser {
 
 export interface CurrentUser extends AuthUser {
   organizationId: string;
+  phoneNumber: string | null;
   employee: { id: string; employeeNo: string; status: string } | null;
 }

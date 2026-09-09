@@ -13,6 +13,8 @@ export interface NotificationPreference {
   id: string;
   eventType: string;
   emailEnabled: boolean;
+  smsEnabled: boolean;
+  pushEnabled: boolean;
 }
 
 // Handbook §7.2 event catalog — used to render a friendly label and let the
