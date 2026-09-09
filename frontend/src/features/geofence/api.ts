@@ -1,5 +1,5 @@
 import { apiClient, type ApiSuccess } from "@/lib/api/client";
-import type { GeofenceZone, LocationPolicy } from "@/features/geofence/types";
+import type { GeofencePoint, GeofenceZone, LocationPolicy } from "@/features/geofence/types";
 
 export async function getGeofencePolicy(): Promise<{ locationPolicy: LocationPolicy }> {
   const res = await apiClient.get<ApiSuccess<{ locationPolicy: LocationPolicy }>>(
@@ -23,12 +23,9 @@ export async function listGeofenceZones(): Promise<GeofenceZone[]> {
   return res.data.data;
 }
 
-export interface CreateGeofenceZoneInput {
-  label: string;
-  lat: number;
-  lng: number;
-  radiusMeters: number;
-}
+export type CreateGeofenceZoneInput =
+  | { label: string; shape: "CIRCLE"; lat: number; lng: number; radiusMeters: number }
+  | { label: string; shape: "POLYGON"; polygon: GeofencePoint[] };
 
 export async function createGeofenceZone(input: CreateGeofenceZoneInput): Promise<GeofenceZone> {
   const res = await apiClient.post<ApiSuccess<GeofenceZone>>("/organization/geofence-zones", input);

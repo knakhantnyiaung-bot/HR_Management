@@ -4,7 +4,7 @@ import request from "supertest";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { prisma } from "@database/prisma";
 import { createApp } from "../../app";
-import { haversineMeters } from "@modules/geofence/geofence.service";
+import { haversineMeters, pointInPolygon } from "@modules/geofence/geofence.service";
 
 const app = createApp();
 
@@ -124,5 +124,73 @@ describe("geofence module", () => {
     const res = await authed("post", "/api/v1/attendance/check-in", token);
     expect(res.status).toBe(201);
     expect(res.body.data.locationSource).toBe("UNAVAILABLE");
+  });
+
+  describe("polygon zones (GEO-10..13)", () => {
+    // A ~small square around 16.80/96.15, far enough from the "HQ" circle
+    // zone from beforeAll that a polygon-only check-in can't accidentally
+    // pass via the circle instead.
+    const squarePolygon = [
+      { lat: 16.9, lng: 96.2 },
+      { lat: 16.9, lng: 96.21 },
+      { lat: 16.91, lng: 96.21 },
+      { lat: 16.91, lng: 96.2 },
+    ];
+
+    it("computes point-in-polygon containment for a convex square", () => {
+      expect(pointInPolygon({ lat: 16.905, lng: 96.205 }, squarePolygon)).toBe(true);
+      expect(pointInPolygon({ lat: 17.0, lng: 96.205 }, squarePolygon)).toBe(false);
+      // On-boundary point is treated as inside, matching the CIRCLE zones'
+      // inclusive (<=) radius check.
+      expect(pointInPolygon({ lat: 16.9, lng: 96.2 }, squarePolygon)).toBe(true);
+    });
+
+    it("rejects a zone payload that mixes circle fields with a polygon", async () => {
+      const res = await authed("post", "/api/v1/organization/geofence-zones", hrToken).send({
+        label: "Bad zone",
+        shape: "POLYGON",
+        lat: 16.8,
+        lng: 96.15,
+        polygon: squarePolygon,
+      });
+      expect(res.status).toBe(400);
+      expect(res.body.error.code).toBe("INVALID_ZONE_SHAPE");
+    });
+
+    it("rejects a POLYGON zone with no polygon vertices", async () => {
+      const res = await authed("post", "/api/v1/organization/geofence-zones", hrToken).send({
+        label: "Bad zone",
+        shape: "POLYGON",
+      });
+      expect(res.status).toBe(400);
+      expect(res.body.error.code).toBe("INVALID_ZONE_SHAPE");
+    });
+
+    it("accepts an OFFICE check-in inside a polygon zone and rejects one outside it", async () => {
+      const createRes = await authed("post", "/api/v1/organization/geofence-zones", hrToken).send({
+        label: "Warehouse",
+        shape: "POLYGON",
+        polygon: squarePolygon,
+      });
+      expect(createRes.status).toBe(201);
+      expect(createRes.body.data.shape).toBe("POLYGON");
+
+      const { token: insideToken } = await createEmployee("office-polygon-inside", "Password123!", "OFFICE");
+      const insideRes = await authed("post", "/api/v1/attendance/check-in", insideToken).send({
+        lat: 16.905,
+        lng: 96.205,
+        accuracyMeters: 10,
+      });
+      expect(insideRes.status).toBe(201);
+
+      const { token: outsideToken } = await createEmployee("office-polygon-outside", "Password123!", "OFFICE");
+      const outsideRes = await authed("post", "/api/v1/attendance/check-in", outsideToken).send({
+        lat: 20.0,
+        lng: 96.205,
+        accuracyMeters: 10,
+      });
+      expect(outsideRes.status).toBe(422);
+      expect(outsideRes.body.error.code).toBe("OUTSIDE_GEOFENCE");
+    });
   });
 });

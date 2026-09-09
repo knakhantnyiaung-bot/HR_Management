@@ -78,6 +78,18 @@ enum LocationPolicy {
   GEOFENCE_ENFORCED
 }
 
+// ---------------------------------------------------------------------------
+// Sprint 3 Wave 1 enums — HLD §5, Handbook GEO-10..13
+// ---------------------------------------------------------------------------
+
+// GEO-10 — a zone is either a circle (lat/lng/radiusMeters, Sprint 2) or a
+// polygon (an ordered vertex list, Sprint 3). Additive: existing rows are
+// backfilled to CIRCLE, no data migration of their lat/lng/radius values.
+enum GeofenceShape {
+  CIRCLE
+  POLYGON
+}
+
 // HLD Appendix C — notification outbox delivery state.
 enum NotificationEventStatus {
   PENDING
@@ -491,16 +503,26 @@ model AuditLog {
 // Sprint 2 — Geofence Enforcement (HLD §11, Handbook §6 GEO-*)
 // ---------------------------------------------------------------------------
 
+// GEO-10..13 — lat/lng/radiusMeters are CIRCLE-only and now optional;
+// polygon is POLYGON-only. Which fields are required for a given shape is
+// enforced in geofence.schema.ts/geofence.service.ts, not a DB constraint —
+// same choice Sprint 2 made for REC-03/REC-05 rather than a partial check
+// constraint.
 model GeofenceZone {
-  id             String   @id @default(uuid())
-  organizationId String   @map("organization_id")
+  id             String        @id @default(uuid())
+  organizationId String        @map("organization_id")
   label          String
-  lat            Float
-  lng            Float
-  radiusMeters   Int      @map("radius_meters")
-  status         String   @default("ACTIVE")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  shape          GeofenceShape @default(CIRCLE)
+  lat            Float?
+  lng            Float?
+  radiusMeters   Int?          @map("radius_meters")
+  // GEO-10 — ordered [{lat,lng}, ...] vertex list, 3-50 points. Stored as
+  // JSON rather than a child table: a zone's own vertex order matters and
+  // is always read/written as one unit, never queried per-vertex.
+  polygon        Json?
+  status         String        @default("ACTIVE")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
 
   organization Organization @relation(fields: [organizationId], references: [id])
 
