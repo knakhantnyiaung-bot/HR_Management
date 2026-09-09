@@ -22,6 +22,10 @@ export const updateEmployeeSchema = z
     positionId: z.string().uuid().optional(),
     workModel: z.nativeEnum(WorkModel).optional(),
     joinDate: z.coerce.date().optional(),
+    // PERF-07 — the only place a manager relationship is recorded in this
+    // system (no separate org-chart feature); null clears it. Used by
+    // performance reviews to resolve who does the "manager" section.
+    managerId: z.string().uuid().nullable().optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: "At least one field must be provided",

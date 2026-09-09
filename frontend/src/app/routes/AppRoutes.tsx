@@ -29,6 +29,8 @@ import { CandidatePortalPage } from "@/features/careers/CandidatePortalPage";
 import { CandidateApplicationDetailPage } from "@/features/careers/CandidateApplicationDetailPage";
 import { CandidateProtectedRoute } from "@/features/careers/CandidateProtectedRoute";
 import { AssetsPage } from "@/features/assets/AssetsPage";
+import { PerformancePage } from "@/features/performance/PerformancePage";
+import { ReviewDetailPage } from "@/features/performance/ReviewDetailPage";
 
 export function AppRoutes() {
   return (
@@ -77,6 +79,8 @@ export function AppRoutes() {
           <Route path="/payslips/:id" element={<PayslipDetailPage />} />
           <Route path="/expenses" element={<ExpensesPage />} />
           <Route path="/assets" element={<AssetsPage />} />
+          <Route path="/performance" element={<PerformancePage />} />
+          <Route path="/performance/reviews/:id" element={<ReviewDetailPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
 
           <Route

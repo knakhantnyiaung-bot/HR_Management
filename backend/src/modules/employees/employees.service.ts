@@ -17,6 +17,7 @@ const EMPLOYEE_INCLUDE = {
   department: { select: { id: true, name: true } },
   position: { select: { id: true, title: true } },
   user: { select: { id: true, email: true, role: true, status: true } },
+  manager: { select: { id: true, employeeNo: true, user: { select: { email: true } } } },
 } satisfies Prisma.EmployeeInclude;
 
 type EmployeeWithRelations = Prisma.EmployeeGetPayload<{ include: typeof EMPLOYEE_INCLUDE }>;
@@ -244,6 +245,22 @@ export async function updateEmployee(
       input.departmentId ?? existing.departmentId,
       input.positionId ?? existing.positionId,
     );
+  }
+
+  // PERF-07 — an employee can't be their own manager; deeper cycle
+  // detection (A manages B manages A) is deliberately out of scope —
+  // performance reviews only ever look at an employee's direct manager,
+  // never walk the chain, so a cycle further up wouldn't affect anything.
+  if (input.managerId) {
+    if (input.managerId === employeeId) {
+      throw AppError.badRequest("INVALID_MANAGER", "An employee cannot be their own manager");
+    }
+    const manager = await prisma.employee.findFirst({
+      where: { id: input.managerId, organizationId },
+    });
+    if (!manager) {
+      throw AppError.badRequest("INVALID_MANAGER", "managerId must reference an employee in this organization");
+    }
   }
 
   return prisma.$transaction(async (tx) => {

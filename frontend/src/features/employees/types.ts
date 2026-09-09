@@ -12,6 +12,9 @@ export interface EmployeeSummary {
   department: { id: string; name: string };
   position: { id: string; title: string };
   user: { id: string; email: string; role: UserRole; status: string };
+  // PERF-07 — the employee's manager, if one is set. Used by performance
+  // reviews to resolve who does the "manager" section.
+  manager: { id: string; employeeNo: string; user: { email: string } } | null;
 }
 
 export interface CreateEmployeeResult extends EmployeeSummary {

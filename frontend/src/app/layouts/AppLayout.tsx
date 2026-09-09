@@ -15,6 +15,7 @@ import {
   Menu,
   Package,
   Receipt,
+  Star,
   Settings,
   Timer,
   Users,
@@ -175,6 +176,7 @@ export function AppLayout() {
       { to: "/payslips", label: "Payslips", icon: FileText },
       { to: "/expenses", label: "Expenses", icon: Receipt },
       { to: "/assets", label: "Assets", icon: Package },
+      { to: "/performance", label: "Performance", icon: Star },
     );
   }
   if (isHrRole || user?.role === "HIRING_MANAGER") {

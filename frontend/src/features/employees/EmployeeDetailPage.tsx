@@ -12,6 +12,7 @@ import {
   activateEmployee,
   deactivateEmployee,
   getEmployee,
+  listEmployees,
   terminateEmployee,
   updateEmployee,
 } from "@/features/employees/api";
@@ -183,8 +184,75 @@ export function EmployeeDetailPage() {
       </div>
 
       <div className="mt-8">
+        <ManagerSection employeeId={employeeId} currentManagerId={employee.manager?.id ?? ""} />
+      </div>
+
+      <div className="mt-8">
         <SalaryProfileSection employeeId={employeeId} />
       </div>
+    </div>
+  );
+}
+
+// PERF-07 — performance reviews resolve "who does the manager section" from
+// this. A separate small section rather than folding into EditEmployeeForm
+// above, matching how the careers-page slug settings sit apart from the
+// main organization edit form.
+function ManagerSection({
+  employeeId,
+  currentManagerId,
+}: {
+  employeeId: string;
+  currentManagerId: string;
+}) {
+  const queryClient = useQueryClient();
+  const [managerId, setManagerId] = useState(currentManagerId);
+
+  const { data: employees } = useQuery({
+    queryKey: ["employees", "for-manager-picker"],
+    queryFn: () => listEmployees({ page: 1, pageSize: 100, status: "ACTIVE" }),
+  });
+
+  const mutation = useMutation({
+    mutationFn: () => updateEmployee(employeeId, { managerId: managerId || null }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["employees", employeeId] });
+    },
+  });
+
+  return (
+    <div>
+      <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Manager</h2>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+        Used by performance reviews to resolve who submits the manager section.
+      </p>
+      <div className="mt-2 flex items-center gap-3 card">
+        <select
+          value={managerId}
+          onChange={(e) => setManagerId(e.target.value)}
+          className="input-field flex-1"
+        >
+          <option value="">No manager</option>
+          {employees?.items
+            .filter((emp) => emp.id !== employeeId)
+            .map((emp) => (
+              <option key={emp.id} value={emp.id}>
+                {emp.employeeNo} — {emp.user.email}
+              </option>
+            ))}
+        </select>
+        <button
+          type="button"
+          onClick={() => mutation.mutate()}
+          disabled={mutation.isPending || managerId === currentManagerId}
+          className="btn-primary"
+        >
+          {mutation.isPending ? "Saving…" : "Save"}
+        </button>
+      </div>
+      {mutation.isError && (
+        <p className="mt-2 error-text">{getApiErrorMessage(mutation.error, "Could not update the manager.")}</p>
+      )}
     </div>
   );
 }

@@ -45,6 +45,7 @@ export interface UpdateEmployeeInput {
   positionId?: string;
   workModel?: WorkModel;
   joinDate?: string;
+  managerId?: string | null;
 }
 
 export async function updateEmployee(id: string, input: UpdateEmployeeInput): Promise<EmployeeSummary> {

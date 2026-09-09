@@ -144,6 +144,16 @@ enum AssetStatus {
   RETIRED
 }
 
+// PERF-01..07 — matches the payroll-run lifecycle shape (DRAFT/CALCULATED/
+// APPROVED/PAID) at a smaller scale: DRAFT while HR is setting the cycle
+// up, OPEN once self/manager reviews can be submitted, CLOSED once
+// finalized (no more submissions, regardless of who tries).
+enum ReviewCycleStatus {
+  DRAFT
+  OPEN
+  CLOSED
+}
+
 enum JobPostingStatus {
   DRAFT
   OPEN
@@ -207,23 +217,24 @@ model Organization {
   createdAt      DateTime       @default(now()) @map("created_at")
   updatedAt      DateTime       @updatedAt @map("updated_at")
 
-  users               User[]
-  departments         Department[]
-  positions           Position[]
-  employees           Employee[]
-  attendanceRecords   AttendanceRecord[]
-  leaveTypes          LeaveType[]
-  payrollRuns         PayrollRun[]
-  auditLogs           AuditLog[]
-  geofenceZones       GeofenceZone[]
-  notificationEvents  NotificationEvent[]
-  notifications       Notification[]
-  expenseCategories   ExpenseCategory[]
-  expenseClaims       ExpenseClaim[]
-  jobPostings         JobPosting[]
-  candidates          Candidate[]
-  calendarIntegration CalendarIntegration?
-  assets              Asset[]
+  users                   User[]
+  departments             Department[]
+  positions               Position[]
+  employees               Employee[]
+  attendanceRecords       AttendanceRecord[]
+  leaveTypes              LeaveType[]
+  payrollRuns             PayrollRun[]
+  auditLogs               AuditLog[]
+  geofenceZones           GeofenceZone[]
+  notificationEvents      NotificationEvent[]
+  notifications           Notification[]
+  expenseCategories       ExpenseCategory[]
+  expenseClaims           ExpenseClaim[]
+  jobPostings             JobPosting[]
+  candidates              Candidate[]
+  calendarIntegration     CalendarIntegration?
+  assets                  Asset[]
+  performanceReviewCycles PerformanceReviewCycle[]
 
   @@map("organizations")
 }
@@ -312,6 +323,13 @@ model Employee {
   positionId     String         @map("position_id")
   workModel      WorkModel      @default(OFFICE) @map("work_model")
   status         EmployeeStatus @default(DRAFT)
+  // PERF-07 — the only manager/org-chart relationship in this system;
+  // added for performance reviews' "manager review" step, not a general
+  // org-chart feature. Self-referencing, nullable (most employees may have
+  // no manager set, especially before this feature was added). Deeper
+  // hierarchy (a manager's manager) is never walked — reviews only ever
+  // look at an employee's direct manager.
+  managerId      String?        @map("manager_id")
   createdAt      DateTime       @default(now()) @map("created_at")
   updatedAt      DateTime       @updatedAt @map("updated_at")
 
@@ -319,19 +337,23 @@ model Employee {
   user         User         @relation(fields: [userId], references: [id])
   department   Department   @relation(fields: [departmentId], references: [id])
   position     Position     @relation(fields: [positionId], references: [id])
+  manager      Employee?    @relation("EmployeeManager", fields: [managerId], references: [id])
+  reports      Employee[]   @relation("EmployeeManager")
 
-  attendanceRecords AttendanceRecord[]
-  leaveBalances     LeaveBalance[]
-  leaveRequests     LeaveRequest[]
-  overtimeRequests  OvertimeRequest[]
-  salaryProfiles    SalaryProfile[]
-  payrollItems      PayrollItem[]
-  expenseClaims     ExpenseClaim[]
-  currentAssets     Asset[]            @relation("CurrentAssetHolder")
-  assetAssignments  AssetAssignment[]  @relation("AssetAssignmentHistory")
+  attendanceRecords  AttendanceRecord[]
+  leaveBalances      LeaveBalance[]
+  leaveRequests      LeaveRequest[]
+  overtimeRequests   OvertimeRequest[]
+  salaryProfiles     SalaryProfile[]
+  payrollItems       PayrollItem[]
+  expenseClaims      ExpenseClaim[]
+  currentAssets      Asset[]             @relation("CurrentAssetHolder")
+  assetAssignments   AssetAssignment[]   @relation("AssetAssignmentHistory")
+  performanceReviews PerformanceReview[]
 
   @@unique([organizationId, employeeNo])
   @@index([organizationId])
+  @@index([managerId])
   @@map("employees")
 }
 
@@ -977,4 +999,61 @@ model AssetAssignment {
   @@index([assetId])
   @@index([employeeId])
   @@map("asset_assignments")
+}
+
+// ---------------------------------------------------------------------------
+// Sprint 3 Wave 2 — Performance/KPI (Handbook PERF-*)
+// ---------------------------------------------------------------------------
+
+model PerformanceReviewCycle {
+  id             String            @id @default(uuid())
+  organizationId String            @map("organization_id")
+  name           String
+  periodStart    DateTime          @map("period_start") @db.Date
+  periodEnd      DateTime          @map("period_end") @db.Date
+  status         ReviewCycleStatus @default(DRAFT)
+  createdAt      DateTime          @default(now()) @map("created_at")
+  updatedAt      DateTime          @updatedAt @map("updated_at")
+
+  organization Organization        @relation(fields: [organizationId], references: [id])
+  reviews      PerformanceReview[]
+
+  @@index([organizationId])
+  @@map("performance_review_cycles")
+}
+
+// PERF-03/04 — one row per (cycle, employee), created in bulk when the
+// cycle opens (openReviewCycle, for every then-ACTIVE employee). No
+// separate status column — PENDING/SELF_SUBMITTED/COMPLETED is derived
+// from selfSubmittedAt/managerSubmittedAt in performance.service.ts rather
+// than stored, so there's no second copy of that state to drift out of
+// sync (same reasoning that kept Asset.status as the only source of truth
+// alongside currentEmployeeId, just one step further here). goals is
+// free-text for the period — Wave 2 scope has no separate Goal entity with
+// its own lifecycle.
+model PerformanceReview {
+  id                 String    @id @default(uuid())
+  cycleId            String    @map("cycle_id")
+  employeeId         String    @map("employee_id")
+  goals              String?
+  selfRating         Int?      @map("self_rating")
+  selfComments       String?   @map("self_comments")
+  selfSubmittedAt    DateTime? @map("self_submitted_at")
+  managerRating      Int?      @map("manager_rating")
+  managerComments    String?   @map("manager_comments")
+  managerSubmittedAt DateTime? @map("manager_submitted_at")
+  // Who actually submitted the manager section — usually the employee's
+  // Employee.managerId, but HR/Super Admin may stand in (e.g. no manager
+  // set) — recorded here since it can differ from managerId.
+  managerUserId      String?   @map("manager_user_id")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  cycle    PerformanceReviewCycle @relation(fields: [cycleId], references: [id])
+  employee Employee               @relation(fields: [employeeId], references: [id])
+
+  @@unique([cycleId, employeeId])
+  @@index([cycleId])
+  @@index([employeeId])
+  @@map("performance_reviews")
 }
