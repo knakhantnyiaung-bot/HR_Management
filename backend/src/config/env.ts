@@ -66,4 +66,9 @@ export const env = {
   // JWT_SECRET is (openssl rand -hex 32) and can be set even before a
   // Google Cloud project exists.
   calendarTokenEncKey: process.env.CALENDAR_TOKEN_ENC_KEY,
+  // AI-01..05 (Sprint 3 Wave 3) — optional, same "opt-in feature" treatment.
+  // Without a key, POST /ai/chat returns a clear config-missing error
+  // rather than the app failing to start.
+  anthropicApiKey: process.env.ANTHROPIC_API_KEY,
+  anthropicModel: process.env.ANTHROPIC_MODEL ?? "claude-sonnet-5",
 };

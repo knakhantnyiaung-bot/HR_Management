@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   Banknote,
+  Bot,
   Briefcase,
   Building2,
   CalendarDays,
@@ -179,6 +180,7 @@ export function AppLayout() {
       { to: "/assets", label: "Assets", icon: Package },
       { to: "/performance", label: "Performance", icon: Star },
       { to: "/courses", label: "Learning", icon: GraduationCap },
+      { to: "/assistant", label: "HR Assistant", icon: Bot },
     );
   }
   if (isHrRole || user?.role === "HIRING_MANAGER") {
