@@ -114,7 +114,7 @@ export function SalaryProfileSection({ employeeId }: { employeeId: string }) {
           <button
             type="button"
             onClick={startEditing}
-            className="text-sm text-slate-500 hover:underline dark:text-slate-400"
+            className="btn-text"
           >
             {current ? "Change salary" : "Set salary"}
           </button>
@@ -122,7 +122,7 @@ export function SalaryProfileSection({ employeeId }: { employeeId: string }) {
       </div>
 
       {!isEditing && (
-        <div className="mt-2 rounded-lg border border-slate-200 bg-white p-4 text-sm shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="mt-2 card text-sm">
           {isCurrentLoading && <p className="text-slate-400 dark:text-slate-500">Loading…</p>}
           {!isCurrentLoading && !current && (
             <p className="text-slate-400 dark:text-slate-500">No active salary profile.</p>
@@ -160,7 +160,7 @@ export function SalaryProfileSection({ employeeId }: { employeeId: string }) {
       {isEditing && (
         <form
           onSubmit={handleSubmit((values) => upsertMutation.mutate(values))}
-          className="mt-2 space-y-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+          className="mt-2 space-y-4 card"
         >
           <div className="grid grid-cols-2 gap-4">
             <TextField
@@ -210,7 +210,7 @@ export function SalaryProfileSection({ employeeId }: { employeeId: string }) {
           />
 
           {upsertMutation.isError && (
-            <p className="text-sm text-rose-600 dark:text-rose-400">
+            <p className="error-text">
               {getApiErrorMessage(upsertMutation.error, "Could not save the salary profile.")}
             </p>
           )}
@@ -219,14 +219,14 @@ export function SalaryProfileSection({ employeeId }: { employeeId: string }) {
             <button
               type="submit"
               disabled={upsertMutation.isPending}
-              className="rounded-md bg-indigo-600 transition-colors hover:bg-indigo-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+              className="btn-primary"
             >
               {upsertMutation.isPending ? "Saving…" : "Save"}
             </button>
             <button
               type="button"
               onClick={() => setIsEditing(false)}
-              className="text-sm text-slate-500 hover:underline dark:text-slate-400"
+              className="btn-text"
             >
               Cancel
             </button>
@@ -239,14 +239,14 @@ export function SalaryProfileSection({ employeeId }: { employeeId: string }) {
           <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
             History
           </h3>
-          <div className="mt-2 overflow-x-auto rounded-lg border border-slate-200 shadow-sm dark:border-slate-800">
+          <div className="mt-2 overflow-x-auto card-table">
             <table className="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-800">
               <thead className="bg-slate-50 dark:bg-slate-900">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  <th className="table-head-cell">
                     Effective from
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  <th className="table-head-cell">
                     Effective to
                   </th>
                   <th className="px-4 py-2 text-right font-medium text-slate-500 dark:text-slate-400">
@@ -256,7 +256,7 @@ export function SalaryProfileSection({ employeeId }: { employeeId: string }) {
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white dark:divide-slate-800 dark:bg-slate-900">
                 {history.map((profile) => (
-                  <tr key={profile.id} className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                  <tr key={profile.id} className="row-hover">
                     <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
                       {profile.effectiveFrom.slice(0, 10)}
                     </td>
@@ -300,19 +300,19 @@ function AmountRows({ label, name, fields, register, onAdd, onRemove }: AmountRo
           <div key={field.id} className="flex items-center gap-2">
             <input
               placeholder="Label (e.g. transport)"
-              className="w-1/2 rounded-md border border-slate-300 px-3 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+              className="input-field-inset w-1/2 py-1.5"
               {...register(`${name}.${index}.key` as const)}
             />
             <input
               type="number"
               placeholder="Amount"
-              className="w-1/3 rounded-md border border-slate-300 px-3 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+              className="input-field-inset w-1/3 py-1.5"
               {...register(`${name}.${index}.amount` as const)}
             />
             <button
               type="button"
               onClick={() => onRemove(index)}
-              className="text-xs text-rose-600 hover:underline dark:text-rose-400"
+              className="text-xs text-danger-600 hover:underline dark:text-danger-400"
             >
               Remove
             </button>

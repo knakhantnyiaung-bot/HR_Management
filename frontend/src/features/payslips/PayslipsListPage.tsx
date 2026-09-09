@@ -43,8 +43,8 @@ export function PayslipsListPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Payslips</h1>
-      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+      <h1 className="page-title">Payslips</h1>
+      <p className="page-subtitle">
         {isHrRole ? "Released salary statements across the organization." : "Your released payslips."}
       </p>
 
@@ -53,7 +53,7 @@ export function PayslipsListPage() {
           <select
             value={employeeId}
             onChange={(e) => handleFilterChange(setEmployeeId, e.target.value)}
-            className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+            className="input-field"
           >
             <option value="">All employees</option>
             {employees?.items.map((e) => (
@@ -67,37 +67,37 @@ export function PayslipsListPage() {
           type="month"
           value={period}
           onChange={(e) => handleFilterChange(setPeriod, e.target.value)}
-          className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+          className="input-field"
         />
       </div>
 
       {isLoading && <p className="mt-6 text-sm text-slate-500 dark:text-slate-400">Loading…</p>}
       {isError && (
-        <p className="mt-6 text-sm text-rose-600 dark:text-rose-400">
+        <p className="mt-6 error-text">
           {getApiErrorMessage(error, "Could not load payslips.")}
         </p>
       )}
 
       {data && (
-        <div className="mt-4 overflow-hidden rounded-lg border border-slate-200 shadow-sm dark:border-slate-800">
+        <div className="mt-4 overflow-hidden card-table">
           <table className="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-800">
             <thead className="bg-slate-50 dark:bg-slate-900">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <th className="table-head-cell">
                   Period
                 </th>
                 {isHrRole && (
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  <th className="table-head-cell">
                     Employee
                   </th>
                 )}
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <th className="table-head-cell">
                   Released
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <th className="table-head-cell text-right">
                   Gross
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <th className="table-head-cell text-right">
                   Net
                 </th>
               </tr>
@@ -107,18 +107,18 @@ export function PayslipsListPage() {
                 <tr>
                   <td
                     colSpan={isHrRole ? 5 : 4}
-                    className="px-4 py-6 text-center text-slate-400 dark:text-slate-500"
+                    className="px-4 py-10 text-center text-sm text-slate-400 dark:text-slate-500"
                   >
                     No payslips match these filters.
                   </td>
                 </tr>
               )}
               {data.items.map((payslip) => (
-                <tr key={payslip.id} className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                <tr key={payslip.id} className="row-hover">
                   <td className="px-4 py-3">
                     <Link
                       to={`/payslips/${payslip.id}`}
-                      className="font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+                      className="link-accent"
                     >
                       {payslip.payrollItem.payrollRun.period}
                     </Link>

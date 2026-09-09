@@ -40,7 +40,9 @@ export async function getEmployeeHandler(req: Request, res: Response): Promise<v
   const { organizationId, userId, role } = requireAuthContext(req);
   const employee = await getEmployeeById(organizationId, requireIdParam(req));
 
-  if (role === "EMPLOYEE" && employee.user.id !== userId) {
+  // Sprint 2: HIRING_MANAGER must not fall through this check just because
+  // it isn't literally "EMPLOYEE" — same own-record-only restriction.
+  if (role !== "HR_ADMIN" && role !== "SUPER_ADMIN" && employee.user.id !== userId) {
     throw AppError.forbidden("You may only view your own employee record");
   }
 

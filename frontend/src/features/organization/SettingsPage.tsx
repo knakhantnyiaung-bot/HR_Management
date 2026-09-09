@@ -2,8 +2,9 @@ import { useState } from "react";
 import { OrganizationSettingsSection } from "@/features/organization/OrganizationSettingsSection";
 import { DepartmentsAdmin } from "@/features/organization/DepartmentsAdmin";
 import { PositionsAdmin } from "@/features/organization/PositionsAdmin";
+import { GeofenceSettingsSection } from "@/features/geofence/GeofenceSettingsSection";
 
-const TABS = ["Organization", "Departments", "Positions"] as const;
+const TABS = ["Organization", "Departments", "Positions", "Geofence"] as const;
 type Tab = (typeof TABS)[number];
 
 export function SettingsPage() {
@@ -12,8 +13,8 @@ export function SettingsPage() {
   return (
     <div>
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Settings</h1>
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+        <h1 className="page-title">Settings</h1>
+        <p className="page-subtitle">
           Organization profile, departments, and positions.
         </p>
       </div>
@@ -25,9 +26,9 @@ export function SettingsPage() {
               key={t}
               type="button"
               onClick={() => setTab(t)}
-              className={`border-b-2 px-1 py-2 text-sm font-medium ${
+              className={`border-b-2 px-1 py-2 text-sm font-medium transition-colors ${
                 tab === t
-                  ? "border-slate-900 text-slate-900 dark:border-slate-100 dark:text-slate-100"
+                  ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
                   : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
               }`}
             >
@@ -41,6 +42,7 @@ export function SettingsPage() {
         {tab === "Organization" && <OrganizationSettingsSection />}
         {tab === "Departments" && <DepartmentsAdmin />}
         {tab === "Positions" && <PositionsAdmin />}
+        {tab === "Geofence" && <GeofenceSettingsSection />}
       </div>
     </div>
   );

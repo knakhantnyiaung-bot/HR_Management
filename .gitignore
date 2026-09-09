@@ -25,6 +25,10 @@ npm-debug.log*
 # Prisma
 backend/prisma/migrations/dev.db
 
+# Sprint 2 local file storage (receipts, resumes) — see
+# backend/src/common/storage/storageAdapter.ts
+backend/storage/
+
 # Testing / coverage
 coverage/
 

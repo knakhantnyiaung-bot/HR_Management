@@ -1,8 +1,11 @@
 import { Prisma, RequestStatus } from "@prisma/client";
 import { prisma } from "@database/prisma";
+import type { AuthContext } from "@common/auth/requireAuth";
 import { AppError } from "@common/errors/AppError";
 import { recordAudit } from "@modules/audit/audit.service";
 import { getEmployeeByUserId } from "@modules/employees/employees.service";
+import { emitNotificationEvent } from "@modules/notifications/notification.emitter";
+import { getHrAdminUserIds } from "@modules/notifications/notification.recipients";
 import type {
   CreateLeaveRequestInput,
   CreateLeaveTypeInput,
@@ -13,7 +16,7 @@ import type {
 
 const LEAVE_REQUEST_INCLUDE = {
   employee: {
-    select: { id: true, employeeNo: true, user: { select: { email: true } } },
+    select: { id: true, employeeNo: true, user: { select: { id: true, email: true } } },
   },
   leaveType: { select: { id: true, name: true, paid: true } },
 } satisfies Prisma.LeaveRequestInclude;
@@ -63,12 +66,12 @@ export async function createLeaveType(organizationId: string, input: CreateLeave
 
 export async function listLeaveBalances(
   organizationId: string,
-  requester: { userId: string; role: "SUPER_ADMIN" | "HR_ADMIN" | "EMPLOYEE" },
+  requester: { userId: string; role: AuthContext["role"] },
   query: ListLeaveBalancesQuery,
 ) {
   const where: Prisma.LeaveBalanceWhereInput = { employee: { organizationId } };
 
-  if (requester.role === "EMPLOYEE") {
+  if (requester.role !== "HR_ADMIN" && requester.role !== "SUPER_ADMIN") {
     const employee = await getEmployeeByUserId(organizationId, requester.userId);
     where.employeeId = employee.id;
   } else if (query.employeeId) {
@@ -182,28 +185,47 @@ export async function createLeaveRequest(
     );
   }
 
-  return prisma.leaveRequest.create({
-    data: {
-      employeeId: employee.id,
-      leaveTypeId: input.leaveTypeId,
-      startDate: input.startDate,
-      endDate: input.endDate,
-      days: calculateDays(input.startDate, input.endDate),
-      reason: input.reason,
-      status: RequestStatus.PENDING,
-    },
-    include: LEAVE_REQUEST_INCLUDE,
+  return prisma.$transaction(async (tx) => {
+    const request = await tx.leaveRequest.create({
+      data: {
+        employeeId: employee.id,
+        leaveTypeId: input.leaveTypeId,
+        startDate: input.startDate,
+        endDate: input.endDate,
+        days: calculateDays(input.startDate, input.endDate),
+        reason: input.reason,
+        status: RequestStatus.PENDING,
+      },
+      include: LEAVE_REQUEST_INCLUDE,
+    });
+
+    // Sprint 2 NOTIF wiring (Sec 7.2) — additive, no change to creation logic.
+    await emitNotificationEvent(tx, {
+      organizationId,
+      eventType: "leave.request.submitted",
+      recipientUserIds: await getHrAdminUserIds(tx, organizationId),
+      data: {
+        employeeName: request.employee.user.email,
+        leaveTypeName: request.leaveType.name,
+        startDate: request.startDate.toISOString().slice(0, 10),
+        endDate: request.endDate.toISOString().slice(0, 10),
+      },
+      relatedResourceType: "LeaveRequest",
+      relatedResourceId: request.id,
+    });
+
+    return request;
   });
 }
 
 export async function listLeaveRequests(
   organizationId: string,
-  requester: { userId: string; role: "SUPER_ADMIN" | "HR_ADMIN" | "EMPLOYEE" },
+  requester: { userId: string; role: AuthContext["role"] },
   query: ListLeaveRequestsQuery,
 ) {
   const where: Prisma.LeaveRequestWhereInput = { employee: { organizationId } };
 
-  if (requester.role === "EMPLOYEE") {
+  if (requester.role !== "HR_ADMIN" && requester.role !== "SUPER_ADMIN") {
     const employee = await getEmployeeByUserId(organizationId, requester.userId);
     where.employeeId = employee.id;
   } else if (query.employeeId) {
@@ -334,6 +356,20 @@ export async function approveLeaveRequest(
       tx,
     );
 
+    await emitNotificationEvent(tx, {
+      organizationId,
+      eventType: "leave.request.decided",
+      recipientUserIds: [updated.employee.user.id],
+      data: {
+        status: "APPROVED",
+        leaveTypeName: updated.leaveType.name,
+        startDate: updated.startDate.toISOString().slice(0, 10),
+        endDate: updated.endDate.toISOString().slice(0, 10),
+      },
+      relatedResourceType: "LeaveRequest",
+      relatedResourceId: requestId,
+    });
+
     return updated;
   });
 }
@@ -372,6 +408,20 @@ export async function rejectLeaveRequest(
       },
       tx,
     );
+
+    await emitNotificationEvent(tx, {
+      organizationId,
+      eventType: "leave.request.decided",
+      recipientUserIds: [updated.employee.user.id],
+      data: {
+        status: "REJECTED",
+        leaveTypeName: updated.leaveType.name,
+        startDate: updated.startDate.toISOString().slice(0, 10),
+        endDate: updated.endDate.toISOString().slice(0, 10),
+      },
+      relatedResourceType: "LeaveRequest",
+      relatedResourceId: requestId,
+    });
 
     return updated;
   });

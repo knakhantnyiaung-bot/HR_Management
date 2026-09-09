@@ -27,7 +27,7 @@ export function PayslipDetailPage() {
   }
   if (isError || !payslip) {
     return (
-      <p className="text-sm text-rose-600 dark:text-rose-400">
+      <p className="error-text">
         {getApiErrorMessage(error, "Could not load this payslip.")}
       </p>
     );
@@ -38,17 +38,17 @@ export function PayslipDetailPage() {
 
   return (
     <div className="max-w-xl">
-      <Link to="/payslips" className="text-sm text-slate-500 hover:underline dark:text-slate-400">
+      <Link to="/payslips" className="btn-text">
         ← Payslips
       </Link>
 
-      <div className="mt-4 rounded-lg border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="mt-4 card p-6">
         <div className="flex items-start justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+            <h1 className="page-title">
               Payslip — {payrollItem.payrollRun.period}
             </h1>
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            <p className="page-subtitle">
               {payrollItem.employee.employeeNo} · {payrollItem.employee.user.email}
             </p>
           </div>
@@ -110,9 +110,9 @@ export function PayslipDetailPage() {
           </div>
         </div>
 
-        <div className="mt-6 flex items-center justify-between rounded-md bg-slate-50 px-4 py-3 dark:bg-slate-800">
+        <div className="mt-6 flex items-center justify-between rounded-lg bg-indigo-50 px-4 py-3 dark:bg-indigo-500/10">
           <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">Net pay</span>
-          <span className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+          <span className="text-xl font-bold tracking-tight text-indigo-600 dark:text-indigo-400">
             {formatMoney(Number(payrollItem.net))}
           </span>
         </div>

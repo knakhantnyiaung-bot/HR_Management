@@ -9,6 +9,8 @@ import { HrDashboardPage } from "@/features/dashboard/HrDashboardPage";
 import { EmployeeCreatePage } from "@/features/employees/EmployeeCreatePage";
 import { EmployeeDetailPage } from "@/features/employees/EmployeeDetailPage";
 import { EmployeesListPage } from "@/features/employees/EmployeesListPage";
+import { AboutPage } from "@/features/info/AboutPage";
+import { ContactPage } from "@/features/info/ContactPage";
 import { LeavePage } from "@/features/leave/LeavePage";
 import { SettingsPage } from "@/features/organization/SettingsPage";
 import { OvertimePage } from "@/features/overtime/OvertimePage";
@@ -16,6 +18,10 @@ import { PayrollRunDetailPage } from "@/features/payroll/PayrollRunDetailPage";
 import { PayrollRunsListPage } from "@/features/payroll/PayrollRunsListPage";
 import { PayslipDetailPage } from "@/features/payslips/PayslipDetailPage";
 import { PayslipsListPage } from "@/features/payslips/PayslipsListPage";
+import { NotificationsPage } from "@/features/notifications/NotificationsPage";
+import { ExpensesPage } from "@/features/expenses/ExpensesPage";
+import { RecruitmentPage } from "@/features/recruitment/RecruitmentPage";
+import { ApplicationDetailPage } from "@/features/recruitment/ApplicationDetailPage";
 
 export function AppRoutes() {
   return (
@@ -49,6 +55,18 @@ export function AppRoutes() {
           <Route path="/overtime" element={<OvertimePage />} />
           <Route path="/payslips" element={<PayslipsListPage />} />
           <Route path="/payslips/:id" element={<PayslipDetailPage />} />
+          <Route path="/expenses" element={<ExpensesPage />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
+
+          <Route
+            element={<ProtectedRoute roles={["HR_ADMIN", "SUPER_ADMIN", "HIRING_MANAGER"]} />}
+          >
+            <Route path="/recruitment" element={<RecruitmentPage />} />
+            <Route path="/recruitment/applications/:id" element={<ApplicationDetailPage />} />
+          </Route>
+
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/contact" element={<ContactPage />} />
         </Route>
       </Route>
 

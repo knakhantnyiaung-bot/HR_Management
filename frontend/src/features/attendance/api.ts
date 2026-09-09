@@ -1,14 +1,15 @@
 import { apiClient, type ApiSuccess } from "@/lib/api/client";
 import type { ListResult } from "@/lib/api/types";
+import type { CapturedLocation } from "@/lib/geolocation";
 import type { AttendanceRecord } from "@/features/attendance/types";
 
-export async function checkIn(): Promise<AttendanceRecord> {
-  const res = await apiClient.post<ApiSuccess<AttendanceRecord>>("/attendance/check-in");
+export async function checkIn(location?: CapturedLocation): Promise<AttendanceRecord> {
+  const res = await apiClient.post<ApiSuccess<AttendanceRecord>>("/attendance/check-in", location);
   return res.data.data;
 }
 
-export async function checkOut(): Promise<AttendanceRecord> {
-  const res = await apiClient.post<ApiSuccess<AttendanceRecord>>("/attendance/check-out");
+export async function checkOut(location?: CapturedLocation): Promise<AttendanceRecord> {
+  const res = await apiClient.post<ApiSuccess<AttendanceRecord>>("/attendance/check-out", location);
   return res.data.data;
 }
 

@@ -7,7 +7,10 @@ import { AppError } from "@common/errors/AppError";
 export interface AuthContext {
   userId: string;
   organizationId: string;
-  role: "SUPER_ADMIN" | "HR_ADMIN" | "EMPLOYEE";
+  // Sprint 2 §10/§3.1 — HIRING_MANAGER added alongside the Sprint 1 roles;
+  // resource-scope checks (not just this role check) live in
+  // recruitment.service.ts.
+  role: "SUPER_ADMIN" | "HR_ADMIN" | "HIRING_MANAGER" | "EMPLOYEE";
 }
 
 declare global {

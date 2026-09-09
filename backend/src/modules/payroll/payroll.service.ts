@@ -1,10 +1,11 @@
 import type { PrismaClient } from "@prisma/client";
-import { PayrollRunStatus, Prisma } from "@prisma/client";
+import { ExpenseClaimStatus, PayrollRunStatus, Prisma } from "@prisma/client";
 import { prisma } from "@database/prisma";
 import { AppError } from "@common/errors/AppError";
 import { recordAudit } from "@modules/audit/audit.service";
 import { calculatePayrollItem, periodToDateRange } from "@modules/payroll/payroll.calculator";
 import type { ListPayrollRunsQuery } from "@modules/payroll/payroll.schema";
+import { emitNotificationEvent } from "@modules/notifications/notification.emitter";
 
 type DbClient = PrismaClient | Prisma.TransactionClient;
 
@@ -162,6 +163,21 @@ export async function calculatePayrollRun(organizationId: string, runId: string,
       );
     }
 
+    // Sprint 2 EXP-05/06 — recalculation must revert any expense claims this
+    // run had already reimbursed back to APPROVED/unreimbursed before the
+    // clean-slate delete below, so recalculating a DRAFT/CALCULATED run
+    // never strands them as reimbursed-but-orphaned.
+    const previousItems = await tx.payrollItem.findMany({
+      where: { payrollRunId: runId },
+      select: { id: true },
+    });
+    if (previousItems.length > 0) {
+      await tx.expenseClaim.updateMany({
+        where: { payrollItemId: { in: previousItems.map((item) => item.id) } },
+        data: { status: ExpenseClaimStatus.APPROVED, payrollItemId: null },
+      });
+    }
+
     // Recalculation starts from a clean slate.
     await tx.payrollItem.deleteMany({ where: { payrollRunId: runId } });
 
@@ -170,7 +186,7 @@ export async function calculatePayrollRun(organizationId: string, runId: string,
     let deductionsTotal = 0;
 
     for (const employee of employees) {
-      const [salaryProfile, approvedOvertime, unpaidLeave] = await Promise.all([
+      const [salaryProfile, approvedOvertime, unpaidLeave, approvedExpenses] = await Promise.all([
         tx.salaryProfile.findFirst({
           where: {
             employeeId: employee.id,
@@ -189,6 +205,16 @@ export async function calculatePayrollRun(organizationId: string, runId: string,
             startDate: { lte: end },
             endDate: { gte: start },
             leaveType: { paid: false },
+          },
+        }),
+        // Sprint 2 EXP-05 — only APPROVED, not-yet-reimbursed claims for the
+        // period are payroll-eligible.
+        tx.expenseClaim.findMany({
+          where: {
+            employeeId: employee.id,
+            status: ExpenseClaimStatus.APPROVED,
+            payrollItemId: null,
+            expenseDate: { gte: start, lte: end },
           },
         }),
       ]);
@@ -214,9 +240,13 @@ export async function calculatePayrollRun(organizationId: string, runId: string,
           multiplier: ot.multiplier.toNumber(),
         })),
         unpaidLeave: unpaidLeave.map((leave) => ({ id: leave.id, days: leave.days.toNumber() })),
+        approvedExpenses: approvedExpenses.map((expense) => ({
+          id: expense.id,
+          amount: expense.amount.toNumber(),
+        })),
       });
 
-      await tx.payrollItem.create({
+      const payrollItem = await tx.payrollItem.create({
         data: {
           payrollRunId: runId,
           employeeId: employee.id,
@@ -227,6 +257,16 @@ export async function calculatePayrollRun(organizationId: string, runId: string,
           net: result.net,
         },
       });
+
+      // Sprint 2 EXP-05/06/07 — mark the claims that fed this calculation as
+      // REIMBURSED, snapshotted against this PayrollItem, in the same
+      // transaction as the calculation itself.
+      if (approvedExpenses.length > 0) {
+        await tx.expenseClaim.updateMany({
+          where: { id: { in: approvedExpenses.map((expense) => expense.id) } },
+          data: { status: ExpenseClaimStatus.REIMBURSED, payrollItemId: payrollItem.id },
+        });
+      }
 
       grossTotal += result.gross;
       netTotal += result.net;
@@ -294,7 +334,10 @@ export async function approvePayrollRun(organizationId: string, runId: string, a
       tx,
     );
 
-    const items = await tx.payrollItem.findMany({ where: { payrollRunId: runId }, select: { id: true } });
+    const items = await tx.payrollItem.findMany({
+      where: { payrollRunId: runId },
+      select: { id: true, employee: { select: { userId: true } } },
+    });
     await tx.payslip.createMany({
       data: items.map((item) => ({ payrollItemId: item.id })),
       skipDuplicates: true,
@@ -311,6 +354,18 @@ export async function approvePayrollRun(organizationId: string, runId: string, a
       },
       tx,
     );
+
+    // Sprint 2 NOTIF wiring (Sec 7.2) — additive: one outbox insert fanning
+    // out to every employee in the run, no change to release logic itself.
+    const run = await tx.payrollRun.findUniqueOrThrow({ where: { id: runId }, select: { period: true } });
+    await emitNotificationEvent(tx, {
+      organizationId,
+      eventType: "payroll.run.released",
+      recipientUserIds: items.map((item) => item.employee.userId),
+      data: { period: run.period },
+      relatedResourceType: "PayrollRun",
+      relatedResourceId: runId,
+    });
 
     return reloadPayrollRun(tx, runId);
   });

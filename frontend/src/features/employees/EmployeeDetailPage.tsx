@@ -70,7 +70,7 @@ export function EmployeeDetailPage() {
   }
   if (employeeQuery.isError || !employeeQuery.data) {
     return (
-      <p className="text-sm text-rose-600 dark:text-rose-400">
+      <p className="error-text">
         {getApiErrorMessage(employeeQuery.error, "Could not load this employee.")}
       </p>
     );
@@ -82,16 +82,16 @@ export function EmployeeDetailPage() {
 
   return (
     <div className="max-w-2xl">
-      <Link to="/employees" className="text-sm text-slate-500 hover:underline dark:text-slate-400">
+      <Link to="/employees" className="btn-text">
         ← Employees
       </Link>
 
       <div className="mt-2 flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+          <h1 className="page-title">
             {employee.employeeNo}
           </h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{employee.user.email}</p>
+          <p className="page-subtitle">{employee.user.email}</p>
         </div>
         <StatusBadge status={employee.status} />
       </div>
@@ -115,7 +115,7 @@ export function EmployeeDetailPage() {
           <button
             type="button"
             onClick={() => setConfirmingTerminate(true)}
-            className="rounded-md border border-rose-300 px-3 py-1.5 text-sm text-rose-700 hover:bg-rose-50 dark:border-rose-800 dark:text-rose-400 dark:hover:bg-rose-900/20"
+            className="rounded-lg border border-danger-300 px-3 py-1.5 text-sm font-medium text-danger-700 transition-colors hover:bg-danger-50 dark:border-danger-800 dark:text-danger-400 dark:hover:bg-danger-900/20"
           >
             Terminate
           </button>
@@ -127,14 +127,14 @@ export function EmployeeDetailPage() {
               type="button"
               onClick={() => terminateMutation.mutate()}
               disabled={terminateMutation.isPending}
-              className="rounded-md bg-rose-600 px-3 py-1.5 text-white disabled:opacity-50"
+              className="rounded-lg bg-danger-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-danger-700 disabled:opacity-50 dark:bg-danger-500 dark:hover:bg-danger-400"
             >
               {terminateMutation.isPending ? "Terminating…" : "Confirm"}
             </button>
             <button
               type="button"
               onClick={() => setConfirmingTerminate(false)}
-              className="text-slate-500 hover:underline dark:text-slate-400"
+              className="btn-text"
             >
               Cancel
             </button>
@@ -142,7 +142,7 @@ export function EmployeeDetailPage() {
         )}
       </div>
       {lifecycleError && (
-        <p className="mt-2 text-sm text-rose-600 dark:text-rose-400">
+        <p className="mt-2 error-text">
           {getApiErrorMessage(lifecycleError, "That action could not be completed.")}
         </p>
       )}
@@ -154,7 +154,7 @@ export function EmployeeDetailPage() {
             <button
               type="button"
               onClick={() => setIsEditing(true)}
-              className="text-sm text-slate-500 hover:underline dark:text-slate-400"
+              className="btn-text"
             >
               Edit
             </button>
@@ -162,7 +162,7 @@ export function EmployeeDetailPage() {
         </div>
 
         {!isEditing ? (
-          <dl className="mt-2 grid grid-cols-2 gap-4 rounded-lg border border-slate-200 bg-white p-4 text-sm shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <dl className="mt-2 grid grid-cols-2 gap-4 card text-sm">
             <Field label="Department" value={employee.department.name} />
             <Field label="Position" value={employee.position.title} />
             <Field label="Work model" value={employee.workModel} />
@@ -203,7 +203,7 @@ function LifecycleButton({
       type="button"
       onClick={onClick}
       disabled={isPending}
-      className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 disabled:opacity-50 dark:border-slate-700 dark:text-slate-200"
+      className="btn-secondary"
     >
       {isPending ? "…" : label}
     </button>
@@ -259,7 +259,7 @@ function EditEmployeeForm({
   return (
     <form
       onSubmit={handleSubmit((values) => updateMutation.mutate(values))}
-      className="mt-2 space-y-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+      className="mt-2 space-y-4 card"
     >
       <div className="grid grid-cols-2 gap-4">
         <SelectField
@@ -293,7 +293,7 @@ function EditEmployeeForm({
       </div>
 
       {updateMutation.isError && (
-        <p className="text-sm text-rose-600 dark:text-rose-400">
+        <p className="error-text">
           {getApiErrorMessage(updateMutation.error, "Could not save these changes.")}
         </p>
       )}
@@ -302,14 +302,14 @@ function EditEmployeeForm({
         <button
           type="submit"
           disabled={updateMutation.isPending}
-          className="rounded-md bg-indigo-600 transition-colors hover:bg-indigo-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+          className="btn-primary"
         >
           {updateMutation.isPending ? "Saving…" : "Save"}
         </button>
         <button
           type="button"
           onClick={onDone}
-          className="text-sm text-slate-500 hover:underline dark:text-slate-400"
+          className="btn-text"
         >
           Cancel
         </button>

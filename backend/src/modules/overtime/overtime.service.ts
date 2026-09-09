@@ -1,8 +1,10 @@
 import { Prisma, RequestStatus } from "@prisma/client";
 import { prisma } from "@database/prisma";
+import type { AuthContext } from "@common/auth/requireAuth";
 import { AppError } from "@common/errors/AppError";
 import { recordAudit } from "@modules/audit/audit.service";
 import { getEmployeeByUserId } from "@modules/employees/employees.service";
+import { emitNotificationEvent } from "@modules/notifications/notification.emitter";
 import type {
   CreateOvertimeRequestInput,
   ListOvertimeRequestsQuery,
@@ -10,7 +12,7 @@ import type {
 
 const OVERTIME_REQUEST_INCLUDE = {
   employee: {
-    select: { id: true, employeeNo: true, user: { select: { email: true } } },
+    select: { id: true, employeeNo: true, user: { select: { id: true, email: true } } },
   },
 } satisfies Prisma.OvertimeRequestInclude;
 
@@ -70,12 +72,14 @@ export async function createOvertimeRequest(
 
 export async function listOvertimeRequests(
   organizationId: string,
-  requester: { userId: string; role: "SUPER_ADMIN" | "HR_ADMIN" | "EMPLOYEE" },
+  requester: { userId: string; role: AuthContext["role"] },
   query: ListOvertimeRequestsQuery,
 ) {
   const where: Prisma.OvertimeRequestWhereInput = { employee: { organizationId } };
 
-  if (requester.role === "EMPLOYEE") {
+  // Sprint 2: any role other than HR_ADMIN/SUPER_ADMIN (incl. HIRING_MANAGER)
+  // sees its own overtime requests only.
+  if (requester.role !== "HR_ADMIN" && requester.role !== "SUPER_ADMIN") {
     const employee = await getEmployeeByUserId(organizationId, requester.userId);
     where.employeeId = employee.id;
   } else if (query.employeeId) {
@@ -173,6 +177,20 @@ async function transitionOvertimeRequest(
       },
       tx,
     );
+
+    // Sprint 2 NOTIF wiring (Sec 7.2) — only approve/reject are a "decision"
+    // worth notifying the requester about; cancel is the requester's own
+    // action, so notifying them of it would be redundant.
+    if (target === RequestStatus.APPROVED || target === RequestStatus.REJECTED) {
+      await emitNotificationEvent(tx, {
+        organizationId,
+        eventType: "overtime.request.decided",
+        recipientUserIds: [updated.employee.user.id],
+        data: { status: target, workDate: updated.workDate.toISOString().slice(0, 10) },
+        relatedResourceType: "OvertimeRequest",
+        relatedResourceId: requestId,
+      });
+    }
 
     return updated;
   });

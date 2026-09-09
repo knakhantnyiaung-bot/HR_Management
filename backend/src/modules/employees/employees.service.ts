@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import bcrypt from "bcrypt";
-import { EmployeeStatus, Prisma } from "@prisma/client";
+import { EmployeeStatus, Prisma, type WorkModel } from "@prisma/client";
 import { prisma } from "@database/prisma";
 import { AppError } from "@common/errors/AppError";
 import { recordAudit } from "@modules/audit/audit.service";
@@ -26,7 +26,9 @@ const ALLOWED_TRANSITIONS: Record<EmployeeStatus, EmployeeStatus[]> = {
   TERMINATED: [],
 };
 
-function generateTempPassword(): string {
+// Exported for recruitment.service.ts's candidate-to-employee conversion
+// (Sprint 2 HANDOFF-01..06), which needs the same temp-password generation.
+export function generateTempPassword(): string {
   return randomBytes(9).toString("base64url");
 }
 
@@ -39,7 +41,9 @@ function isUniqueConstraintOn(err: unknown, fieldHint: string): boolean {
   );
 }
 
-async function assertDepartmentAndPosition(
+// Exported for recruitment.service.ts's job posting creation, which needs
+// the identical department/position validation (Sprint 2).
+export async function assertDepartmentAndPosition(
   organizationId: string,
   departmentId: string,
   positionId: string,
@@ -108,6 +112,64 @@ export async function getEmployeeByUserId(organizationId: string, userId: string
   return employee;
 }
 
+interface CreateEmployeeInTransactionInput {
+  email: string;
+  passwordHash: string;
+  employeeNo?: string;
+  joinDate: Date;
+  departmentId: string;
+  positionId: string;
+  workModel: WorkModel;
+}
+
+// Sprint 2 HANDOFF-02/03 — extracted so recruitment.service.ts's candidate
+// conversion (recruitment.service.ts) can create the User+Employee+audit
+// inside its own transaction (which also updates the CandidateApplication),
+// instead of duplicating this logic or nesting a second top-level
+// transaction. createEmployee() below is unchanged in behavior — it just
+// delegates its transaction body here.
+export async function createEmployeeInTransaction(
+  tx: Prisma.TransactionClient,
+  organizationId: string,
+  input: CreateEmployeeInTransactionInput,
+  actorId: string,
+): Promise<EmployeeWithRelations> {
+  const employeeNo =
+    input.employeeNo ?? `EMP-${String((await tx.employee.count({ where: { organizationId } })) + 1).padStart(4, "0")}`;
+
+  const user = await tx.user.create({
+    data: { organizationId, email: input.email, passwordHash: input.passwordHash, role: "EMPLOYEE" },
+  });
+
+  const created = await tx.employee.create({
+    data: {
+      organizationId,
+      userId: user.id,
+      employeeNo,
+      joinDate: input.joinDate,
+      departmentId: input.departmentId,
+      positionId: input.positionId,
+      workModel: input.workModel,
+      status: EmployeeStatus.DRAFT,
+    },
+    include: EMPLOYEE_INCLUDE,
+  });
+
+  await recordAudit(
+    {
+      organizationId,
+      actorId,
+      action: "EMPLOYEE_CREATED",
+      resourceType: "Employee",
+      resourceId: created.id,
+      metadata: { employeeNo, email: input.email },
+    },
+    tx,
+  );
+
+  return created;
+}
+
 export async function createEmployee(
   organizationId: string,
   input: CreateEmployeeInput,
@@ -121,42 +183,22 @@ export async function createEmployee(
   const MAX_ATTEMPTS = 3;
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     try {
-      const employee = await prisma.$transaction(async (tx) => {
-        const employeeNo =
-          input.employeeNo ?? `EMP-${String((await tx.employee.count({ where: { organizationId } })) + 1).padStart(4, "0")}`;
-
-        const user = await tx.user.create({
-          data: { organizationId, email: input.email, passwordHash, role: "EMPLOYEE" },
-        });
-
-        const created = await tx.employee.create({
-          data: {
-            organizationId,
-            userId: user.id,
-            employeeNo,
+      const employee = await prisma.$transaction((tx) =>
+        createEmployeeInTransaction(
+          tx,
+          organizationId,
+          {
+            email: input.email,
+            passwordHash,
+            employeeNo: input.employeeNo,
             joinDate: input.joinDate,
             departmentId: input.departmentId,
             positionId: input.positionId,
             workModel: input.workModel,
-            status: EmployeeStatus.DRAFT,
           },
-          include: EMPLOYEE_INCLUDE,
-        });
-
-        await recordAudit(
-          {
-            organizationId,
-            actorId,
-            action: "EMPLOYEE_CREATED",
-            resourceType: "Employee",
-            resourceId: created.id,
-            metadata: { employeeNo, email: input.email },
-          },
-          tx,
-        );
-
-        return created;
-      });
+          actorId,
+        ),
+      );
 
       return { employee, temporaryPassword };
     } catch (err) {

@@ -14,6 +14,13 @@ import { overtimeRouter } from "@modules/overtime/overtime.routes";
 import { payrollRouter } from "@modules/payroll/payroll.routes";
 import { payslipsRouter } from "@modules/payslips/payslips.routes";
 import { dashboardRouter } from "@modules/dashboard/dashboard.routes";
+import { geofenceRouter } from "@modules/geofence/geofence.routes";
+import {
+  notificationPreferencesRouter,
+  notificationsRouter,
+} from "@modules/notifications/notifications.routes";
+import { expensesRouter } from "@modules/expenses/expenses.routes";
+import { recruitmentRouter } from "@modules/recruitment/recruitment.routes";
 
 import { env } from "@config/env";
 import { errorHandler } from "@common/middleware/errorHandler";
@@ -50,6 +57,9 @@ export function createApp() {
   const v1 = express.Router();
   v1.use("/auth", authRouter);
   v1.use("/organization", organizationsRouter);
+  // Sprint 2 — mounted alongside (not nested under) organizationsRouter,
+  // same pattern as departments/positions.
+  v1.use("/organization", geofenceRouter);
   v1.use("/departments", departmentsRouter);
   v1.use("/positions", positionsRouter);
   v1.use("/employees", employeesRouter);
@@ -59,6 +69,10 @@ export function createApp() {
   v1.use("/payroll", payrollRouter);
   v1.use("/payslips", payslipsRouter);
   v1.use("/dashboard", dashboardRouter);
+  v1.use("/notifications", notificationsRouter);
+  v1.use("/notification-preferences", notificationPreferencesRouter);
+  v1.use("/expenses", expensesRouter);
+  v1.use("/recruitment", recruitmentRouter);
 
   app.use("/api/v1", v1);
 

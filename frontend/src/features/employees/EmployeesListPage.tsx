@@ -41,14 +41,14 @@ export function EmployeesListPage() {
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Employees</h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          <h1 className="page-title">Employees</h1>
+          <p className="page-subtitle">
             Roster, lifecycle, and compensation.
           </p>
         </div>
         <Link
           to="/employees/new"
-          className="rounded-md bg-indigo-600 transition-colors hover:bg-indigo-700 px-3 py-2 text-sm font-medium text-white dark:bg-indigo-500 dark:hover:bg-indigo-400"
+          className="btn-primary"
         >
           New employee
         </Link>
@@ -58,7 +58,7 @@ export function EmployeesListPage() {
         <select
           value={departmentId}
           onChange={(e) => handleFilterChange(setDepartmentId, e.target.value)}
-          className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+          className="input-field"
         >
           <option value="">All departments</option>
           {departments?.map((d) => (
@@ -70,7 +70,7 @@ export function EmployeesListPage() {
         <select
           value={status}
           onChange={(e) => handleFilterChange(setStatus as (v: string) => void, e.target.value)}
-          className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+          className="input-field"
         >
           <option value="">All statuses</option>
           {STATUS_OPTIONS.map((s) => (
@@ -83,29 +83,29 @@ export function EmployeesListPage() {
 
       {isLoading && <p className="mt-6 text-sm text-slate-500 dark:text-slate-400">Loading…</p>}
       {isError && (
-        <p className="mt-6 text-sm text-rose-600 dark:text-rose-400">
+        <p className="mt-6 error-text">
           {getApiErrorMessage(error, "Could not load employees.")}
         </p>
       )}
 
       {data && (
-        <div className="mt-4 overflow-hidden rounded-lg border border-slate-200 shadow-sm dark:border-slate-800">
+        <div className="mt-4 overflow-hidden card-table">
           <table className="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-800">
             <thead className="bg-slate-50 dark:bg-slate-900">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <th className="table-head-cell">
                   Employee no.
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <th className="table-head-cell">
                   Email
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <th className="table-head-cell">
                   Department
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <th className="table-head-cell">
                   Position
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <th className="table-head-cell">
                   Status
                 </th>
               </tr>
@@ -115,18 +115,18 @@ export function EmployeesListPage() {
                 <tr>
                   <td
                     colSpan={5}
-                    className="px-4 py-6 text-center text-slate-400 dark:text-slate-500"
+                    className="px-4 py-10 text-center text-sm text-slate-400 dark:text-slate-500"
                   >
                     No employees match these filters.
                   </td>
                 </tr>
               )}
               {data.items.map((employee) => (
-                <tr key={employee.id} className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                <tr key={employee.id} className="row-hover">
                   <td className="px-4 py-3">
                     <Link
                       to={`/employees/${employee.id}`}
-                      className="font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+                      className="link-accent"
                     >
                       {employee.employeeNo}
                     </Link>

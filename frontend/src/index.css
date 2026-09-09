@@ -55,7 +55,13 @@
 @layer components {
   /* Page framing */
   .app-shell {
-    @apply min-h-screen bg-app-shell;
+    /* bg-fixed pins the gradient to the viewport, not the scrollable page —
+       without it, the corner glows sit near the top/bottom of the full
+       document height and scroll out of view on any content-heavy page.
+       flex-col + the header/main/footer children below keeps the footer
+       pinned to the viewport bottom on short pages instead of floating
+       directly under the content. */
+    @apply flex min-h-screen flex-col bg-app-shell bg-fixed;
   }
   .scrollbar-none {
     scrollbar-width: none;

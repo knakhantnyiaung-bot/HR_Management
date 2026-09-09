@@ -75,8 +75,12 @@ export async function rejectLeaveRequestHandler(req: Request, res: Response): Pr
 
 export async function cancelLeaveRequestHandler(req: Request, res: Response): Promise<void> {
   const { organizationId, userId, role } = requireAuthContext(req);
+  // Sprint 2: restrict everyone except HR_ADMIN/SUPER_ADMIN to their own
+  // request (closes a HIRING_MANAGER gap — see overtime.controller.ts).
   const restrictToEmployeeId =
-    role === "EMPLOYEE" ? (await getEmployeeByUserId(organizationId, userId)).id : undefined;
+    role === "HR_ADMIN" || role === "SUPER_ADMIN"
+      ? undefined
+      : (await getEmployeeByUserId(organizationId, userId)).id;
   const request = await cancelLeaveRequest(
     organizationId,
     requireIdParam(req),

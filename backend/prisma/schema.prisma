@@ -17,6 +17,11 @@ datasource db {
 enum UserRole {
   SUPER_ADMIN
   HR_ADMIN
+  // Sprint 2 §10/§3.1 — scoped to assigned recruitment pipeline items only;
+  // never has salary, offer, or unassigned-candidate visibility. See
+  // recruitment.service.ts for the resource-scope check this role requires
+  // in addition to the ordinary role check.
+  HIRING_MANAGER
   EMPLOYEE
 }
 
@@ -52,28 +57,116 @@ enum PayrollRunStatus {
   PAID
 }
 
+// HLD v1.1 section 11.3 — GPS is optional on every check-in/check-out.
+// GPS = coordinates captured from the client; UNAVAILABLE = none captured
+// (denied, timed out, unsupported, or capture disabled for the org).
+enum LocationSource {
+  GPS
+  MANUAL
+  UNAVAILABLE
+}
+
+// ---------------------------------------------------------------------------
+// Sprint 2 enums — HLD §11/§12/§13/§14, Handbook GEO-*/NOTIF-*/EXP-*/REC-*
+// ---------------------------------------------------------------------------
+
+// Sprint 2 HLD §11.1 — replaces Organization.locationCaptureEnabled (v1.1).
+// Migration backfill: locationCaptureEnabled=true -> LOG_ONLY, false -> NONE.
+enum LocationPolicy {
+  NONE
+  LOG_ONLY
+  GEOFENCE_ENFORCED
+}
+
+// HLD Appendix C — notification outbox delivery state.
+enum NotificationEventStatus {
+  PENDING
+  PROCESSED
+  FAILED
+}
+
+// HLD Appendix C — expense claim lifecycle.
+enum ExpenseClaimStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  REIMBURSED
+  CANCELLED
+}
+
+enum JobPostingStatus {
+  DRAFT
+  OPEN
+  CLOSED
+  ARCHIVED
+}
+
+// HLD Appendix C — candidate pipeline stage. REJECTED/WITHDRAWN are terminal
+// from any stage (REC-02); all others are forward-only.
+enum CandidateApplicationStage {
+  APPLIED
+  SCREENING
+  INTERVIEW
+  OFFER
+  HIRED
+  REJECTED
+  WITHDRAWN
+}
+
+enum InterviewMode {
+  ONSITE
+  REMOTE
+}
+
+enum InterviewStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+// HLD Appendix C — offer lifecycle.
+enum OfferStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  DECLINED
+  RESCINDED
+}
+
 // ---------------------------------------------------------------------------
 // Organization & identity
 // ---------------------------------------------------------------------------
 
 model Organization {
-  id           String   @id @default(uuid())
-  name         String
-  timezone     String   @default("Asia/Yangon")
-  currency     String   @default("MMK")
-  payrollCycle String   @default("MONTHLY") @map("payroll_cycle")
-  status       String   @default("ACTIVE")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id             String         @id @default(uuid())
+  name           String
+  timezone       String         @default("Asia/Yangon")
+  currency       String         @default("MMK")
+  payrollCycle   String         @default("MONTHLY") @map("payroll_cycle")
+  // Sprint 2 HLD §11.1 — replaces v1.1's locationCaptureEnabled boolean.
+  // NONE = old false, LOG_ONLY = old true (default; matches v1.1 behavior
+  // exactly), GEOFENCE_ENFORCED = new hard rejection for OFFICE employees.
+  locationPolicy LocationPolicy @default(LOG_ONLY) @map("location_policy")
+  status         String         @default("ACTIVE")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
 
-  users             User[]
-  departments       Department[]
-  positions         Position[]
-  employees         Employee[]
-  attendanceRecords AttendanceRecord[]
-  leaveTypes        LeaveType[]
-  payrollRuns       PayrollRun[]
-  auditLogs         AuditLog[]
+  users              User[]
+  departments        Department[]
+  positions          Position[]
+  employees          Employee[]
+  attendanceRecords  AttendanceRecord[]
+  leaveTypes         LeaveType[]
+  payrollRuns        PayrollRun[]
+  auditLogs          AuditLog[]
+  geofenceZones      GeofenceZone[]
+  notificationEvents NotificationEvent[]
+  notifications      Notification[]
+  expenseCategories  ExpenseCategory[]
+  expenseClaims      ExpenseClaim[]
+  jobPostings        JobPosting[]
+  candidates         Candidate[]
 
   @@map("organizations")
 }
@@ -88,9 +181,12 @@ model User {
   createdAt      DateTime   @default(now()) @map("created_at")
   updatedAt      DateTime   @updatedAt @map("updated_at")
 
-  organization Organization @relation(fields: [organizationId], references: [id])
-  employee     Employee?
-  auditLogs    AuditLog[]
+  organization              Organization             @relation(fields: [organizationId], references: [id])
+  employee                  Employee?
+  auditLogs                 AuditLog[]
+  notifications             Notification[]
+  notificationPreferences   NotificationPreference[]
+  hiringManagerApplications CandidateApplication[]
 
   @@unique([organizationId, email])
   @@index([organizationId])
@@ -112,6 +208,7 @@ model Department {
   organization Organization @relation(fields: [organizationId], references: [id])
   positions    Position[]
   employees    Employee[]
+  jobPostings  JobPosting[]
 
   @@unique([organizationId, name])
   @@index([organizationId])
@@ -130,6 +227,7 @@ model Position {
   organization Organization @relation(fields: [organizationId], references: [id])
   department   Department   @relation(fields: [departmentId], references: [id])
   employees    Employee[]
+  jobPostings  JobPosting[]
 
   @@index([organizationId])
   @@index([departmentId])
@@ -154,9 +252,9 @@ model Employee {
   updatedAt      DateTime       @updatedAt @map("updated_at")
 
   organization Organization @relation(fields: [organizationId], references: [id])
-  user         User          @relation(fields: [userId], references: [id])
-  department   Department    @relation(fields: [departmentId], references: [id])
-  position     Position      @relation(fields: [positionId], references: [id])
+  user         User         @relation(fields: [userId], references: [id])
+  department   Department   @relation(fields: [departmentId], references: [id])
+  position     Position     @relation(fields: [positionId], references: [id])
 
   attendanceRecords AttendanceRecord[]
   leaveBalances     LeaveBalance[]
@@ -164,6 +262,7 @@ model Employee {
   overtimeRequests  OvertimeRequest[]
   salaryProfiles    SalaryProfile[]
   payrollItems      PayrollItem[]
+  expenseClaims     ExpenseClaim[]
 
   @@unique([organizationId, employeeNo])
   @@index([organizationId])
@@ -175,17 +274,27 @@ model Employee {
 // ---------------------------------------------------------------------------
 
 model AttendanceRecord {
-  id              String    @id @default(uuid())
-  organizationId  String    @map("organization_id")
-  employeeId      String    @map("employee_id")
-  workDate        DateTime  @map("work_date") @db.Date
-  checkIn         DateTime  @map("check_in")
-  checkOut        DateTime? @map("check_out")
-  workingMinutes  Int?      @map("working_minutes")
-  correctedBy     String?   @map("corrected_by")
-  correctionNote  String?   @map("correction_note")
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  id                String         @id @default(uuid())
+  organizationId    String         @map("organization_id")
+  employeeId        String         @map("employee_id")
+  workDate          DateTime       @map("work_date") @db.Date
+  checkIn           DateTime       @map("check_in")
+  checkOut          DateTime?      @map("check_out")
+  workingMinutes    Int?           @map("working_minutes")
+  correctedBy       String?        @map("corrected_by")
+  correctionNote    String?        @map("correction_note")
+  // HLD v1.1 section 11.3/11.4, Handbook v1.1 ATT-09..ATT-13 — optional GPS
+  // capture per event. Nullable: a record with no location is the expected
+  // common case, not an error state. Never used to reject a check-in/out.
+  checkInLat        Float?         @map("check_in_lat")
+  checkInLng        Float?         @map("check_in_lng")
+  checkInAccuracyM  Int?           @map("check_in_accuracy_m")
+  checkOutLat       Float?         @map("check_out_lat")
+  checkOutLng       Float?         @map("check_out_lng")
+  checkOutAccuracyM Int?           @map("check_out_accuracy_m")
+  locationSource    LocationSource @default(UNAVAILABLE) @map("location_source")
+  createdAt         DateTime       @default(now()) @map("created_at")
+  updatedAt         DateTime       @updatedAt @map("updated_at")
 
   organization Organization @relation(fields: [organizationId], references: [id])
   employee     Employee     @relation(fields: [employeeId], references: [id])
@@ -336,20 +445,21 @@ model PayrollItem {
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
-  payrollRun PayrollRun @relation(fields: [payrollRunId], references: [id])
-  employee   Employee   @relation(fields: [employeeId], references: [id])
-  payslip    Payslip?
+  payrollRun    PayrollRun     @relation(fields: [payrollRunId], references: [id])
+  employee      Employee       @relation(fields: [employeeId], references: [id])
+  payslip       Payslip?
+  expenseClaims ExpenseClaim[]
 
   @@unique([payrollRunId, employeeId])
   @@map("payroll_items")
 }
 
 model Payslip {
-  id               String   @id @default(uuid())
-  payrollItemId    String   @unique @map("payroll_item_id")
-  releasedAt       DateTime @default(now()) @map("released_at")
-  documentRef      String?  @map("document_ref")
-  createdAt        DateTime @default(now()) @map("created_at")
+  id            String   @id @default(uuid())
+  payrollItemId String   @unique @map("payroll_item_id")
+  releasedAt    DateTime @default(now()) @map("released_at")
+  documentRef   String?  @map("document_ref")
+  createdAt     DateTime @default(now()) @map("created_at")
 
   payrollItem PayrollItem @relation(fields: [payrollItemId], references: [id])
 
@@ -375,4 +485,276 @@ model AuditLog {
 
   @@index([organizationId, createdAt])
   @@map("audit_logs")
+}
+
+// ---------------------------------------------------------------------------
+// Sprint 2 — Geofence Enforcement (HLD §11, Handbook §6 GEO-*)
+// ---------------------------------------------------------------------------
+
+model GeofenceZone {
+  id             String   @id @default(uuid())
+  organizationId String   @map("organization_id")
+  label          String
+  lat            Float
+  lng            Float
+  radiusMeters   Int      @map("radius_meters")
+  status         String   @default("ACTIVE")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+  @@map("geofence_zones")
+}
+
+// ---------------------------------------------------------------------------
+// Sprint 2 — Notifications (HLD §12, Handbook §7 NOTIF-*)
+// ---------------------------------------------------------------------------
+
+// Transactional outbox row — written inside the same transaction as the
+// business action it announces (NOTIF-01). Drained by an in-process
+// dispatcher (notification.queue.ts); see ADR-011/012 deviation note in the
+// Sprint 2 implementation plan for why this is not a Redis/BullMQ queue.
+model NotificationEvent {
+  id             String                  @id @default(uuid())
+  organizationId String                  @map("organization_id")
+  eventType      String                  @map("event_type")
+  payload        Json
+  status         NotificationEventStatus @default(PENDING)
+  attempts       Int                     @default(0)
+  lastError      String?                 @map("last_error")
+  // Appendix C backoff formula — the dispatcher skips a PENDING row until
+  // this time, instead of retrying it on every poll tick.
+  nextAttemptAt  DateTime                @default(now()) @map("next_attempt_at")
+  createdAt      DateTime                @default(now()) @map("created_at")
+  processedAt    DateTime?               @map("processed_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([status, nextAttemptAt])
+  @@index([organizationId])
+  @@map("notification_events")
+}
+
+model Notification {
+  id                  String    @id @default(uuid())
+  organizationId      String    @map("organization_id")
+  userId              String    @map("user_id")
+  eventType           String    @map("event_type")
+  title               String
+  message             String
+  relatedResourceType String?   @map("related_resource_type")
+  relatedResourceId   String?   @map("related_resource_id")
+  readAt              DateTime? @map("read_at")
+  createdAt           DateTime  @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  user         User         @relation(fields: [userId], references: [id])
+
+  @@index([userId, readAt])
+  @@index([organizationId])
+  @@map("notifications")
+}
+
+// NOTIF-05 — per-user, per-event-type email opt-out. In-app delivery cannot
+// be disabled, so there is deliberately no inAppEnabled column.
+model NotificationPreference {
+  id           String  @id @default(uuid())
+  userId       String  @map("user_id")
+  eventType    String  @map("event_type")
+  emailEnabled Boolean @default(true) @map("email_enabled")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, eventType])
+  @@map("notification_preferences")
+}
+
+// ---------------------------------------------------------------------------
+// Sprint 2 — Expense Claims (HLD §13, Handbook §8 EXP-*)
+// ---------------------------------------------------------------------------
+
+model ExpenseCategory {
+  id              String  @id @default(uuid())
+  organizationId  String  @map("organization_id")
+  name            String
+  requiresReceipt Boolean @default(false) @map("requires_receipt")
+  status          String  @default("ACTIVE")
+
+  organization Organization   @relation(fields: [organizationId], references: [id])
+  claims       ExpenseClaim[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+  @@map("expense_categories")
+}
+
+// EXP-01..EXP-08 — DRAFT -> SUBMITTED -> APPROVED -> REIMBURSED, or REJECTED
+// / CANCELLED. payrollItemId is set only on reimbursement (EXP-05/06/07);
+// deliberately not unique — every approved claim reimbursed in the same
+// employee/period payroll calculation shares one PayrollItem snapshot.
+model ExpenseClaim {
+  id              String             @id @default(uuid())
+  organizationId  String             @map("organization_id")
+  employeeId      String             @map("employee_id")
+  categoryId      String             @map("category_id")
+  amount          Decimal            @db.Decimal(14, 2)
+  expenseDate     DateTime           @map("expense_date") @db.Date
+  description     String?
+  status          ExpenseClaimStatus @default(DRAFT)
+  rejectionReason String?            @map("rejection_reason")
+  approvedBy      String?            @map("approved_by")
+  approvedAt      DateTime?          @map("approved_at")
+  payrollItemId   String?            @map("payroll_item_id")
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
+
+  organization Organization     @relation(fields: [organizationId], references: [id])
+  employee     Employee         @relation(fields: [employeeId], references: [id])
+  category     ExpenseCategory  @relation(fields: [categoryId], references: [id])
+  payrollItem  PayrollItem?     @relation(fields: [payrollItemId], references: [id])
+  receipts     ExpenseReceipt[]
+
+  @@index([organizationId])
+  @@index([employeeId, status])
+  @@index([payrollItemId])
+  @@map("expense_claims")
+}
+
+// File reference only (storage key + metadata) — the binary lives in the
+// StorageAdapter (local disk in Sprint 2, S3-swappable later), never in
+// Postgres. See Handbook §13/DB2-06.
+model ExpenseReceipt {
+  id             String   @id @default(uuid())
+  expenseClaimId String   @map("expense_claim_id")
+  storageKey     String   @map("storage_key")
+  fileName       String   @map("file_name")
+  mimeType       String   @map("mime_type")
+  sizeBytes      Int      @map("size_bytes")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  expenseClaim ExpenseClaim @relation(fields: [expenseClaimId], references: [id])
+
+  @@index([expenseClaimId])
+  @@map("expense_receipts")
+}
+
+// ---------------------------------------------------------------------------
+// Sprint 2 — Recruitment / ATS (HLD §14/§15, Handbook §9/§10 REC-*/HANDOFF-*)
+// ---------------------------------------------------------------------------
+
+model JobPosting {
+  id             String           @id @default(uuid())
+  organizationId String           @map("organization_id")
+  title          String
+  departmentId   String           @map("department_id")
+  positionId     String           @map("position_id")
+  employmentType String           @map("employment_type")
+  openings       Int              @default(1)
+  status         JobPostingStatus @default(DRAFT)
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+
+  organization Organization           @relation(fields: [organizationId], references: [id])
+  department   Department             @relation(fields: [departmentId], references: [id])
+  position     Position               @relation(fields: [positionId], references: [id])
+  applications CandidateApplication[]
+
+  @@index([organizationId])
+  @@map("job_postings")
+}
+
+// REC-01 — HR/Recruiter-entered only in Sprint 2, no public intake endpoint.
+// convertedEmployeeId is set once, on successful conversion (HANDOFF-04),
+// and is the permanent traceability link back to the resulting Employee.
+model Candidate {
+  id                  String   @id @default(uuid())
+  organizationId      String   @map("organization_id")
+  fullName            String   @map("full_name")
+  email               String
+  phone               String?
+  resumeStorageKey    String?  @map("resume_storage_key")
+  resumeFileName      String?  @map("resume_file_name")
+  source              String?
+  convertedEmployeeId String?  @map("converted_employee_id")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  organization Organization           @relation(fields: [organizationId], references: [id])
+  applications CandidateApplication[]
+
+  @@index([organizationId])
+  @@index([organizationId, email])
+  @@map("candidates")
+}
+
+// REC-02/REC-03 — forward-only stage machine, terminal REJECTED/WITHDRAWN
+// from any stage. Duplicate-open-application (REC-03) and single-active-
+// offer (REC-05) are enforced in recruitment.service.ts inside a locked
+// transaction rather than as a DB constraint — see the Sprint 2 plan's note
+// on why a partial-unique index isn't used here.
+model CandidateApplication {
+  id                  String                    @id @default(uuid())
+  candidateId         String                    @map("candidate_id")
+  jobPostingId        String                    @map("job_posting_id")
+  stage               CandidateApplicationStage @default(APPLIED)
+  // References User.id (not Employee) — REC-06: any Hiring Manager account
+  // can be assigned regardless of whether it also has an Employee record.
+  hiringManagerUserId String?                   @map("hiring_manager_user_id")
+  stageUpdatedAt      DateTime                  @default(now()) @map("stage_updated_at")
+  createdAt           DateTime                  @default(now()) @map("created_at")
+  updatedAt           DateTime                  @updatedAt @map("updated_at")
+
+  candidate     Candidate   @relation(fields: [candidateId], references: [id])
+  jobPosting    JobPosting  @relation(fields: [jobPostingId], references: [id])
+  hiringManager User?       @relation(fields: [hiringManagerUserId], references: [id])
+  interviews    Interview[]
+  offers        Offer[]
+
+  @@index([candidateId])
+  @@index([jobPostingId])
+  @@index([hiringManagerUserId])
+  @@map("candidate_applications")
+}
+
+model Interview {
+  id               String          @id @default(uuid())
+  applicationId    String          @map("application_id")
+  scheduledAt      DateTime        @map("scheduled_at")
+  mode             InterviewMode   @default(ONSITE)
+  // Free-text, comma-separated — no calendar integration/participant table
+  // in Sprint 2 (HLD §9.1/out of scope).
+  interviewerNames String?         @map("interviewer_names")
+  feedback         String?
+  score            Int?
+  status           InterviewStatus @default(SCHEDULED)
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
+
+  application CandidateApplication @relation(fields: [applicationId], references: [id])
+
+  @@index([applicationId])
+  @@map("interviews")
+}
+
+// REC-04/REC-05 — only HR Admin/Super Admin create/send/rescind an offer;
+// at most one non-terminal (DRAFT/SENT) offer per application, enforced in
+// the service layer.
+model Offer {
+  id             String      @id @default(uuid())
+  applicationId  String      @map("application_id")
+  proposedSalary Decimal     @map("proposed_salary") @db.Decimal(14, 2)
+  currency       String
+  startDate      DateTime    @map("start_date") @db.Date
+  status         OfferStatus @default(DRAFT)
+  sentAt         DateTime?   @map("sent_at")
+  respondedAt    DateTime?   @map("responded_at")
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+
+  application CandidateApplication @relation(fields: [applicationId], references: [id])
+
+  @@index([applicationId])
+  @@map("offers")
 }

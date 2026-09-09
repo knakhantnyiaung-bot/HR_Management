@@ -15,6 +15,13 @@ export interface UnpaidLeaveInput {
   days: number;
 }
 
+// Sprint 2 HLD §13.1/Handbook EXP-05/07 — an approved-and-unreimbursed
+// expense claim for the period, snapshotted the same way overtime is.
+export interface ApprovedExpenseInput {
+  id: string;
+  amount: number;
+}
+
 export interface SalaryProfileInput {
   id: string;
   basicSalary: number;
@@ -28,6 +35,9 @@ export interface CalculatePayrollItemInput {
   salaryProfile: SalaryProfileInput;
   approvedOvertime: OvertimeInput[];
   unpaidLeave: UnpaidLeaveInput[];
+  // Sprint 2 addition — defaults to [] so existing Sprint 1 callers/tests
+  // that don't pass it keep computing identical results.
+  approvedExpenses?: ApprovedExpenseInput[];
 }
 
 export interface CalculatePayrollItemResult {
@@ -56,7 +66,7 @@ function sumAmounts(values: Record<string, number>): number {
 }
 
 export function calculatePayrollItem(input: CalculatePayrollItemInput): CalculatePayrollItemResult {
-  const { salaryProfile, approvedOvertime, unpaidLeave } = input;
+  const { salaryProfile, approvedOvertime, unpaidLeave, approvedExpenses = [] } = input;
 
   const standardMonthlyHours = salaryProfile.standardMonthlyHours ?? DEFAULT_STANDARD_MONTHLY_HOURS;
   const standardWorkingDays = salaryProfile.standardWorkingDays ?? DEFAULT_STANDARD_WORKING_DAYS;
@@ -88,7 +98,19 @@ export function calculatePayrollItem(input: CalculatePayrollItemInput): Calculat
   const bonus = 0;
   const otherDeductions = 0;
 
-  const gross = round2(salaryProfile.basicSalary + fixedAllowances + approvedOvertimePay + bonus);
+  // Sprint 2 HLD §13.1 — approved expense reimbursements add to gross,
+  // mirroring how approved overtime does; snapshotted the same way.
+  const expenseBreakdown = approvedExpenses.map((expense) => ({
+    id: expense.id,
+    amount: round2(expense.amount),
+  }));
+  const approvedExpenseReimbursement = round2(
+    expenseBreakdown.reduce((sum, e) => sum + e.amount, 0),
+  );
+
+  const gross = round2(
+    salaryProfile.basicSalary + fixedAllowances + approvedOvertimePay + approvedExpenseReimbursement + bonus,
+  );
   const deductions = round2(fixedDeductions + unpaidLeaveDeduction + otherDeductions);
   const net = round2(gross - deductions);
 
@@ -116,6 +138,8 @@ export function calculatePayrollItem(input: CalculatePayrollItemInput): Calculat
       unpaidLeave: leaveBreakdown,
       unpaidLeaveDays,
       unpaidLeaveDeduction,
+      expenses: expenseBreakdown,
+      approvedExpenseReimbursement,
       bonus,
       otherDeductions,
     },

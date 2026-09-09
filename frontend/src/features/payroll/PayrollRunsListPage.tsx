@@ -54,8 +54,8 @@ export function PayrollRunsListPage() {
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Payroll</h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          <h1 className="page-title">Payroll</h1>
+          <p className="page-subtitle">
             Monthly runs, calculation, and approval.
           </p>
         </div>
@@ -63,7 +63,7 @@ export function PayrollRunsListPage() {
           <button
             type="button"
             onClick={() => setShowForm(true)}
-            className="rounded-md bg-indigo-600 transition-colors hover:bg-indigo-700 px-3 py-2 text-sm font-medium text-white dark:bg-indigo-500 dark:hover:bg-indigo-400"
+            className="btn-primary"
           >
             New run
           </button>
@@ -73,39 +73,39 @@ export function PayrollRunsListPage() {
       {showForm && (
         <form
           onSubmit={handleSubmit((values) => createMutation.mutate(values))}
-          className="mt-4 flex items-end gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+          className="mt-4 flex items-end gap-3 card"
         >
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+            <label className="label-field">
               Period
             </label>
             <input
               type="month"
-              className="rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+              className="input-field-inset"
               {...register("period")}
             />
             {errors.period && (
-              <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{errors.period.message}</p>
+              <p className="field-error-text">{errors.period.message}</p>
             )}
           </div>
           <button
             type="submit"
             disabled={createMutation.isPending}
-            className="rounded-md bg-indigo-600 transition-colors hover:bg-indigo-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+            className="btn-primary"
           >
             {createMutation.isPending ? "Creating…" : "Create"}
           </button>
           <button
             type="button"
             onClick={() => setShowForm(false)}
-            className="pb-2 text-sm text-slate-500 hover:underline dark:text-slate-400"
+            className="btn-text pb-2"
           >
             Cancel
           </button>
         </form>
       )}
       {createMutation.isError && (
-        <p className="mt-2 text-sm text-rose-600 dark:text-rose-400">
+        <p className="mt-2 error-text">
           {getApiErrorMessage(createMutation.error, "Could not create the payroll run.")}
         </p>
       )}
@@ -114,7 +114,7 @@ export function PayrollRunsListPage() {
         <select
           value={status}
           onChange={(e) => handleStatusChange(e.target.value)}
-          className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+          className="input-field"
         >
           <option value="">All statuses</option>
           {STATUS_OPTIONS.map((s) => (
@@ -127,26 +127,26 @@ export function PayrollRunsListPage() {
 
       {isLoading && <p className="mt-6 text-sm text-slate-500 dark:text-slate-400">Loading…</p>}
       {isError && (
-        <p className="mt-6 text-sm text-rose-600 dark:text-rose-400">
+        <p className="mt-6 error-text">
           {getApiErrorMessage(error, "Could not load payroll runs.")}
         </p>
       )}
 
       {data && (
-        <div className="mt-4 overflow-hidden rounded-lg border border-slate-200 shadow-sm dark:border-slate-800">
+        <div className="mt-4 overflow-hidden card-table">
           <table className="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-800">
             <thead className="bg-slate-50 dark:bg-slate-900">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <th className="table-head-cell">
                   Period
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <th className="table-head-cell">
                   Status
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <th className="table-head-cell">
                   Employees
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <th className="table-head-cell text-right">
                   Net total
                 </th>
               </tr>
@@ -154,17 +154,17 @@ export function PayrollRunsListPage() {
             <tbody className="divide-y divide-slate-100 bg-white dark:divide-slate-800 dark:bg-slate-900">
               {data.items.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-4 py-6 text-center text-slate-400 dark:text-slate-500">
+                  <td colSpan={4} className="px-4 py-10 text-center text-sm text-slate-400 dark:text-slate-500">
                     No payroll runs match these filters.
                   </td>
                 </tr>
               )}
               {data.items.map((run) => (
-                <tr key={run.id} className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                <tr key={run.id} className="row-hover">
                   <td className="px-4 py-3">
                     <Link
                       to={`/payroll/${run.id}`}
-                      className="font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+                      className="link-accent"
                     >
                       {run.period}
                     </Link>

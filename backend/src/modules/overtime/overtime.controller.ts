@@ -41,8 +41,13 @@ export async function rejectOvertimeRequestHandler(req: Request, res: Response):
 
 export async function cancelOvertimeRequestHandler(req: Request, res: Response): Promise<void> {
   const { organizationId, userId, role } = requireAuthContext(req);
+  // Sprint 2: restrict everyone except HR_ADMIN/SUPER_ADMIN to their own
+  // request — not just literal role === "EMPLOYEE" (closes a HIRING_MANAGER
+  // gap that would otherwise let it cancel anyone's overtime request).
   const restrictToEmployeeId =
-    role === "EMPLOYEE" ? (await getEmployeeByUserId(organizationId, userId)).id : undefined;
+    role === "HR_ADMIN" || role === "SUPER_ADMIN"
+      ? undefined
+      : (await getEmployeeByUserId(organizationId, userId)).id;
   const request = await cancelOvertimeRequest(
     organizationId,
     requireIdParam(req),

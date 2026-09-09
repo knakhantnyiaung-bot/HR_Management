@@ -17,7 +17,9 @@ async function assertViewableByCaller(
   employeeId: string,
 ): Promise<void> {
   const { organizationId, userId, role } = requireAuthContext(req);
-  if (role !== "EMPLOYEE") return;
+  // Sprint 2: only HR_ADMIN/SUPER_ADMIN bypass the ownership check — every
+  // other role (EMPLOYEE, HIRING_MANAGER) must own the record it's viewing.
+  if (role === "HR_ADMIN" || role === "SUPER_ADMIN") return;
 
   const own = await getEmployeeByUserId(organizationId, userId);
   if (own.id !== employeeId) {

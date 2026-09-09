@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
+import { Banknote, MinusCircle, Users, Wallet } from "lucide-react";
 import { StatTile } from "@/components/StatTile";
 import { StatusBadge } from "@/components/StatusBadge";
 import { getApiErrorMessage } from "@/lib/api/client";
@@ -37,7 +38,7 @@ export function PayrollRunDetailPage() {
   }
   if (isError || !run) {
     return (
-      <p className="text-sm text-rose-600 dark:text-rose-400">
+      <p className="error-text">
         {getApiErrorMessage(error, "Could not load this payroll run.")}
       </p>
     );
@@ -45,12 +46,12 @@ export function PayrollRunDetailPage() {
 
   return (
     <div>
-      <Link to="/payroll" className="text-sm text-slate-500 hover:underline dark:text-slate-400">
+      <Link to="/payroll" className="btn-text">
         ← Payroll
       </Link>
 
       <div className="mt-2 flex items-start justify-between">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">{run.period}</h1>
+        <h1 className="page-title">{run.period}</h1>
         <StatusBadge status={run.status} />
       </div>
 
@@ -60,7 +61,7 @@ export function PayrollRunDetailPage() {
             type="button"
             onClick={() => calculateMutation.mutate()}
             disabled={isActionPending}
-            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 disabled:opacity-50 dark:border-slate-700 dark:text-slate-200"
+            className="btn-secondary"
           >
             {calculateMutation.isPending
               ? "Calculating…"
@@ -74,7 +75,7 @@ export function PayrollRunDetailPage() {
             type="button"
             onClick={() => approveMutation.mutate()}
             disabled={isActionPending}
-            className="rounded-md bg-indigo-600 transition-colors hover:bg-indigo-700 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+            className="btn-primary"
           >
             {approveMutation.isPending ? "Approving…" : "Approve"}
           </button>
@@ -89,49 +90,54 @@ export function PayrollRunDetailPage() {
             type="button"
             onClick={() => markPaidMutation.mutate()}
             disabled={isActionPending}
-            className="rounded-md bg-indigo-600 transition-colors hover:bg-indigo-700 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+            className="btn-primary"
           >
             {markPaidMutation.isPending ? "Marking paid…" : "Mark as paid"}
           </button>
         )}
       </div>
       {actionError && (
-        <p className="mt-2 text-sm text-rose-600 dark:text-rose-400">
+        <p className="mt-2 error-text">
           {getApiErrorMessage(actionError, "That action failed.")}
         </p>
       )}
 
       {run.totals && (
         <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-          <StatTile label="Employees" value={formatCount(run.totals.employeeCount)} />
-          <StatTile label="Gross total" value={formatMoney(run.totals.grossTotal)} />
-          <StatTile label="Deductions total" value={formatMoney(run.totals.deductionsTotal)} />
-          <StatTile label="Net total" value={formatMoney(run.totals.netTotal)} />
+          <StatTile label="Employees" value={formatCount(run.totals.employeeCount)} icon={Users} tone="neutral" />
+          <StatTile label="Gross total" value={formatMoney(run.totals.grossTotal)} icon={Wallet} tone="info" />
+          <StatTile
+            label="Deductions total"
+            value={formatMoney(run.totals.deductionsTotal)}
+            icon={MinusCircle}
+            tone="warning"
+          />
+          <StatTile label="Net total" value={formatMoney(run.totals.netTotal)} icon={Banknote} tone="brand" />
         </div>
       )}
 
       {run.items && run.items.length > 0 && (
-        <div className="mt-6 overflow-x-auto rounded-lg border border-slate-200 shadow-sm dark:border-slate-800">
+        <div className="mt-6 overflow-x-auto card-table">
           <table className="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-800">
             <thead className="bg-slate-50 dark:bg-slate-900">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <th className="table-head-cell">
                   Employee
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <th className="table-head-cell text-right">
                   Gross
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <th className="table-head-cell text-right">
                   Deductions
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <th className="table-head-cell text-right">
                   Net
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white dark:divide-slate-800 dark:bg-slate-900">
               {run.items.map((item) => (
-                <tr key={item.id} className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                <tr key={item.id} className="row-hover">
                   <td className="px-4 py-3 text-slate-900 dark:text-slate-100">
                     {item.employee.employeeNo}
                   </td>

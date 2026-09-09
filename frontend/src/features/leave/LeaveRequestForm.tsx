@@ -47,7 +47,7 @@ export function LeaveRequestForm({ onDone }: { onDone: () => void }) {
   return (
     <form
       onSubmit={handleSubmit((values) => createMutation.mutate(values))}
-      className="space-y-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+      className="space-y-4 card"
     >
       <SelectField
         label="Leave type"
@@ -80,7 +80,7 @@ export function LeaveRequestForm({ onDone }: { onDone: () => void }) {
       />
 
       {createMutation.isError && (
-        <p className="text-sm text-rose-600 dark:text-rose-400">
+        <p className="error-text">
           {getApiErrorMessage(createMutation.error, "Could not submit the request.")}
         </p>
       )}
@@ -89,14 +89,14 @@ export function LeaveRequestForm({ onDone }: { onDone: () => void }) {
         <button
           type="submit"
           disabled={createMutation.isPending}
-          className="rounded-md bg-indigo-600 transition-colors hover:bg-indigo-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+          className="btn-primary"
         >
           {createMutation.isPending ? "Submitting…" : "Submit request"}
         </button>
         <button
           type="button"
           onClick={onDone}
-          className="text-sm text-slate-500 hover:underline dark:text-slate-400"
+          className="btn-text"
         >
           Cancel
         </button>

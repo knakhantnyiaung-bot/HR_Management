@@ -22,3 +22,21 @@ export const correctAttendanceSchema = z
   });
 
 export type CorrectAttendanceInput = z.infer<typeof correctAttendanceSchema>;
+
+// HLD v1.1 section 11.3, Handbook v1.1 ATT-09/ATT-11/§17.1 — location is
+// optional and validated for shape only. Deliberately not a zod schema that
+// `.parse()`s and throws: an out-of-range or malformed value must be dropped
+// by the service layer, never turned into a 400 that blocks check-in/out.
+export interface RawAttendanceLocation {
+  lat?: unknown;
+  lng?: unknown;
+  accuracyMeters?: unknown;
+}
+
+export function extractLocation(body: unknown): RawAttendanceLocation {
+  if (!body || typeof body !== "object") {
+    return {};
+  }
+  const { lat, lng, accuracyMeters } = body as Record<string, unknown>;
+  return { lat, lng, accuracyMeters };
+}

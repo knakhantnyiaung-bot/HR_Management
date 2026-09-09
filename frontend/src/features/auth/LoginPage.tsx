@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import { Building2 } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { getApiErrorMessage } from "@/lib/api/client";
 
@@ -31,58 +32,43 @@ export function LoginPage() {
   });
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
+    <div className="app-shell flex min-h-screen items-center justify-center px-4">
       <form
         onSubmit={handleSubmit((values) => loginMutation.mutate(values))}
-        className="w-full max-w-sm rounded-lg border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+        className="card w-full max-w-sm p-8"
       >
-        <h1 className="mb-6 text-xl font-semibold text-slate-900 dark:text-slate-100">
+        <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-700 text-white shadow-sm dark:from-indigo-400 dark:to-indigo-600">
+          <Building2 className="h-5 w-5" aria-hidden="true" />
+        </span>
+        <h1 className="mt-4 text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
           HR &amp; Payroll Platform
         </h1>
+        <p className="page-subtitle">Sign in to continue.</p>
 
-        <label
-          className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300"
-          htmlFor="email"
-        >
+        <label className="label-field mt-6" htmlFor="email">
           Email
         </label>
-        <input
-          id="email"
-          type="email"
-          className="mb-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
-          {...register("email")}
-        />
-        {errors.email && (
-          <p className="mb-2 text-xs text-rose-600 dark:text-rose-400">{errors.email.message}</p>
-        )}
+        <input id="email" type="email" className="input-field-inset w-full" {...register("email")} />
+        {errors.email && <p className="field-error-text">{errors.email.message}</p>}
 
-        <label
-          className="mb-1 mt-3 block text-sm font-medium text-slate-700 dark:text-slate-300"
-          htmlFor="password"
-        >
+        <label className="label-field mt-3" htmlFor="password">
           Password
         </label>
         <input
           id="password"
           type="password"
-          className="mb-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+          className="input-field-inset w-full"
           {...register("password")}
         />
-        {errors.password && (
-          <p className="mb-2 text-xs text-rose-600 dark:text-rose-400">{errors.password.message}</p>
-        )}
+        {errors.password && <p className="field-error-text">{errors.password.message}</p>}
 
         {loginMutation.isError && (
-          <p className="mt-2 text-xs text-rose-600 dark:text-rose-400">
+          <p className="field-error-text">
             {getApiErrorMessage(loginMutation.error, "Login failed. Check your credentials.")}
           </p>
         )}
 
-        <button
-          type="submit"
-          disabled={loginMutation.isPending}
-          className="mt-4 w-full rounded-md bg-indigo-600 transition-colors hover:bg-indigo-700 px-3 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
-        >
+        <button type="submit" disabled={loginMutation.isPending} className="btn-primary mt-6 w-full">
           {loginMutation.isPending ? "Signing in..." : "Sign in"}
         </button>
       </form>

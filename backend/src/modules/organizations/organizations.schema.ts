@@ -6,6 +6,8 @@ export const updateOrganizationSchema = z
     timezone: z.string().min(1).optional(),
     currency: z.string().min(1).optional(),
     payrollCycle: z.string().min(1).optional(),
+    // locationPolicy moved to the geofence module in Sprint 2 — see
+    // GET/PATCH /organization/geofence-policy (geofence.routes.ts).
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: "At least one field must be provided",

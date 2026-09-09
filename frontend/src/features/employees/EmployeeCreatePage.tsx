@@ -61,8 +61,8 @@ export function EmployeeCreatePage() {
 
   return (
     <div className="max-w-lg">
-      <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">New employee</h1>
-      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+      <h1 className="page-title">New employee</h1>
+      <p className="page-subtitle">
         Creates the login account and employee record together, starting in DRAFT status.
       </p>
 
@@ -114,7 +114,7 @@ export function EmployeeCreatePage() {
         />
 
         {createMutation.isError && (
-          <p className="text-sm text-rose-600 dark:text-rose-400">
+          <p className="error-text">
             {getApiErrorMessage(createMutation.error, "Could not create the employee.")}
           </p>
         )}
@@ -123,11 +123,11 @@ export function EmployeeCreatePage() {
           <button
             type="submit"
             disabled={createMutation.isPending}
-            className="rounded-md bg-indigo-600 transition-colors hover:bg-indigo-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+            className="btn-primary"
           >
             {createMutation.isPending ? "Creating…" : "Create employee"}
           </button>
-          <Link to="/employees" className="text-sm text-slate-500 hover:underline dark:text-slate-400">
+          <Link to="/employees" className="btn-text">
             Cancel
           </Link>
         </div>
@@ -140,16 +140,16 @@ function CreatedConfirmation({ employee }: { employee: CreateEmployeeResult }) {
   const navigate = useNavigate();
 
   return (
-    <div className="max-w-lg rounded-lg border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-      <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+    <div className="max-w-lg card p-6">
+      <h1 className="page-title">
         Employee {employee.employeeNo} created
       </h1>
       {employee.temporaryPassword && (
-        <div className="mt-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm dark:border-amber-800 dark:bg-amber-900/30">
-          <p className="font-medium text-amber-900 dark:text-amber-200">
+        <div className="mt-4 rounded-lg border border-warning-300 bg-warning-50 p-3 text-sm dark:border-warning-800 dark:bg-warning-900/30">
+          <p className="font-medium text-warning-900 dark:text-warning-200">
             Temporary password — shown once, save it now:
           </p>
-          <p className="mt-1 font-mono text-amber-900 dark:text-amber-100">
+          <p className="mt-1 font-mono text-warning-900 dark:text-warning-100">
             {employee.temporaryPassword}
           </p>
         </div>
@@ -157,7 +157,7 @@ function CreatedConfirmation({ employee }: { employee: CreateEmployeeResult }) {
       <button
         type="button"
         onClick={() => navigate(`/employees/${employee.id}`)}
-        className="mt-4 rounded-md bg-indigo-600 transition-colors hover:bg-indigo-700 px-4 py-2 text-sm font-medium text-white dark:bg-indigo-500 dark:hover:bg-indigo-400"
+        className="mt-4 btn-primary"
       >
         Go to employee
       </button>

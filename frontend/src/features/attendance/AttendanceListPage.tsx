@@ -2,10 +2,12 @@ import { Fragment, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pagination } from "@/components/Pagination";
 import { getApiErrorMessage } from "@/lib/api/client";
+import { captureLocation } from "@/lib/geolocation";
 import { formatDate, formatDuration, formatTime } from "@/lib/format";
 import { useAuth } from "@/features/auth/AuthContext";
 import { checkIn, checkOut, listAttendance } from "@/features/attendance/api";
 import { CorrectionForm } from "@/features/attendance/CorrectionForm";
+import type { AttendanceRecord } from "@/features/attendance/types";
 import { listEmployees } from "@/features/employees/api";
 
 const PAGE_SIZE = 20;
@@ -45,8 +47,16 @@ export function AttendanceListPage() {
     queryClient.invalidateQueries({ queryKey: ["dashboard", "me"] });
   }
 
-  const checkInMutation = useMutation({ mutationFn: checkIn, onSuccess: invalidateList });
-  const checkOutMutation = useMutation({ mutationFn: checkOut, onSuccess: invalidateList });
+  // HLD v1.1 §15 / Handbook v1.1 §9.3 — location is captured at the moment of
+  // the action, never blocks it, and is simply omitted on denial/timeout.
+  const checkInMutation = useMutation({
+    mutationFn: async () => checkIn(await captureLocation()),
+    onSuccess: invalidateList,
+  });
+  const checkOutMutation = useMutation({
+    mutationFn: async () => checkOut(await captureLocation()),
+    onSuccess: invalidateList,
+  });
 
   function handleFilterChange(setter: (value: string) => void, value: string) {
     setter(value);
@@ -57,8 +67,8 @@ export function AttendanceListPage() {
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Attendance</h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          <h1 className="page-title">Attendance</h1>
+          <p className="page-subtitle">
             {isHrRole ? "Records across the organization." : "Your check-in/out history."}
           </p>
         </div>
@@ -68,7 +78,7 @@ export function AttendanceListPage() {
               type="button"
               onClick={() => checkInMutation.mutate()}
               disabled={checkInMutation.isPending}
-              className="rounded-md bg-indigo-600 transition-colors hover:bg-indigo-700 px-3 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+              className="btn-primary"
             >
               Check in
             </button>
@@ -76,7 +86,7 @@ export function AttendanceListPage() {
               type="button"
               onClick={() => checkOutMutation.mutate()}
               disabled={checkOutMutation.isPending}
-              className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-700 disabled:opacity-50 dark:border-slate-700 dark:text-slate-200"
+              className="btn-secondary"
             >
               Check out
             </button>
@@ -85,7 +95,7 @@ export function AttendanceListPage() {
       </div>
 
       {(checkInMutation.isError || checkOutMutation.isError) && (
-        <p className="mt-2 text-sm text-rose-600 dark:text-rose-400">
+        <p className="mt-2 error-text">
           {getApiErrorMessage(checkInMutation.error ?? checkOutMutation.error, "That action failed.")}
         </p>
       )}
@@ -95,7 +105,7 @@ export function AttendanceListPage() {
           <select
             value={employeeId}
             onChange={(e) => handleFilterChange(setEmployeeId, e.target.value)}
-            className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+            className="input-field"
           >
             <option value="">All employees</option>
             {employees?.items.map((e) => (
@@ -109,48 +119,51 @@ export function AttendanceListPage() {
           type="date"
           value={from}
           onChange={(e) => handleFilterChange(setFrom, e.target.value)}
-          className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+          className="input-field"
         />
         <span className="self-center text-sm text-slate-400 dark:text-slate-500">to</span>
         <input
           type="date"
           value={to}
           onChange={(e) => handleFilterChange(setTo, e.target.value)}
-          className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+          className="input-field"
         />
       </div>
 
       {isLoading && <p className="mt-6 text-sm text-slate-500 dark:text-slate-400">Loading…</p>}
       {isError && (
-        <p className="mt-6 text-sm text-rose-600 dark:text-rose-400">
+        <p className="mt-6 error-text">
           {getApiErrorMessage(error, "Could not load attendance records.")}
         </p>
       )}
 
       {data && (
-        <div className="mt-4 overflow-hidden rounded-lg border border-slate-200 shadow-sm dark:border-slate-800">
+        <div className="mt-4 overflow-hidden card-table">
           <table className="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-800">
             <thead className="bg-slate-50 dark:bg-slate-900">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <th className="table-head-cell">
                   Date
                 </th>
                 {isHrRole && (
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  <th className="table-head-cell">
                     Employee
                   </th>
                 )}
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <th className="table-head-cell">
                   Check in
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <th className="table-head-cell">
                   Check out
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <th className="table-head-cell">
                   Duration
                 </th>
+                <th className="table-head-cell">
+                  Location
+                </th>
                 {isHrRole && (
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  <th className="table-head-cell">
                     Correction
                   </th>
                 )}
@@ -161,8 +174,8 @@ export function AttendanceListPage() {
               {data.items.length === 0 && (
                 <tr>
                   <td
-                    colSpan={isHrRole ? 7 : 4}
-                    className="px-4 py-6 text-center text-slate-400 dark:text-slate-500"
+                    colSpan={isHrRole ? 8 : 5}
+                    className="px-4 py-10 text-center text-sm text-slate-400 dark:text-slate-500"
                   >
                     No attendance records match these filters.
                   </td>
@@ -170,7 +183,7 @@ export function AttendanceListPage() {
               )}
               {data.items.map((record) => (
                 <Fragment key={record.id}>
-                  <tr className="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                  <tr className="row-hover">
                     <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
                       {formatDate(record.workDate)}
                     </td>
@@ -188,6 +201,9 @@ export function AttendanceListPage() {
                     <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
                       {formatDuration(record.workingMinutes)}
                     </td>
+                    <td className="px-4 py-3 text-slate-500 dark:text-slate-400">
+                      <LocationBadge record={record} />
+                    </td>
                     {isHrRole && (
                       <td className="px-4 py-3 text-slate-500 dark:text-slate-400">
                         {record.correctionNote ?? "—"}
@@ -200,7 +216,7 @@ export function AttendanceListPage() {
                           onClick={() =>
                             setCorrectingId(correctingId === record.id ? null : record.id)
                           }
-                          className="text-sm text-slate-500 hover:underline dark:text-slate-400"
+                          className="btn-text"
                         >
                           Correct
                         </button>
@@ -209,7 +225,7 @@ export function AttendanceListPage() {
                   </tr>
                   {isHrRole && correctingId === record.id && (
                     <tr>
-                      <td colSpan={7} className="bg-slate-50 p-0 dark:bg-slate-800/50">
+                      <td colSpan={8} className="bg-slate-50 p-0 dark:bg-slate-800/50">
                         <CorrectionForm
                           record={record}
                           onDone={() => {
@@ -233,5 +249,28 @@ export function AttendanceListPage() {
         </div>
       )}
     </div>
+  );
+}
+
+// Handbook v1.1 §9.3/§9.4 — list views show a presence indicator, not raw
+// coordinates; the exact lat/lng is only in the hover tooltip as a light
+// "detail" affordance rather than a dedicated map view.
+function LocationBadge({ record }: { record: AttendanceRecord }) {
+  if (record.locationSource !== "GPS") {
+    return <span>—</span>;
+  }
+
+  const parts: string[] = [];
+  if (record.checkInLat !== null && record.checkInLng !== null) {
+    parts.push(`Check-in: ${record.checkInLat.toFixed(5)}, ${record.checkInLng.toFixed(5)}`);
+  }
+  if (record.checkOutLat !== null && record.checkOutLng !== null) {
+    parts.push(`Check-out: ${record.checkOutLat.toFixed(5)}, ${record.checkOutLng.toFixed(5)}`);
+  }
+
+  return (
+    <span title={parts.join(" · ") || "Location captured"} className="cursor-help">
+      📍 Located
+    </span>
   );
 }

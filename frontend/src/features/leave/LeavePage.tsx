@@ -17,8 +17,8 @@ export function LeavePage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Leave</h1>
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+        <h1 className="page-title">Leave</h1>
+        <p className="page-subtitle">
           Types, balances, requests, and approvals.
         </p>
       </div>
@@ -34,9 +34,9 @@ export function LeavePage() {
                   key={t}
                   type="button"
                   onClick={() => setTab(t)}
-                  className={`border-b-2 px-1 py-2 text-sm font-medium ${
+                  className={`border-b-2 px-1 py-2 text-sm font-medium transition-colors ${
                     tab === t
-                      ? "border-slate-900 text-slate-900 dark:border-slate-100 dark:text-slate-100"
+                      ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
                       : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
                   }`}
                 >

@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { requireAuthContext, requireIdParam } from "@common/http/requestHelpers";
 import {
   correctAttendanceSchema,
+  extractLocation,
   listAttendanceQuerySchema,
 } from "@modules/attendance/attendance.schema";
 import {
@@ -13,13 +14,13 @@ import {
 
 export async function checkInHandler(req: Request, res: Response): Promise<void> {
   const { organizationId, userId } = requireAuthContext(req);
-  const record = await checkIn(organizationId, userId);
+  const record = await checkIn(organizationId, userId, extractLocation(req.body));
   res.status(201).json({ success: true, data: record });
 }
 
 export async function checkOutHandler(req: Request, res: Response): Promise<void> {
   const { organizationId, userId } = requireAuthContext(req);
-  const record = await checkOut(organizationId, userId);
+  const record = await checkOut(organizationId, userId, extractLocation(req.body));
   res.json({ success: true, data: record });
 }
 

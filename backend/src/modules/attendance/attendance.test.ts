@@ -186,4 +186,63 @@ describe("attendance module", () => {
 
     await authed("post", "/api/v1/attendance/check-out", employeeToken);
   });
+
+  // Handbook v1.1 §19.1 — Attendance / GPS test matrix.
+  describe("v1.1 GPS capture", () => {
+    it("captures GPS coordinates on check-in and check-out", async () => {
+      const checkIn = await authed("post", "/api/v1/attendance/check-in", employeeToken)
+        .send({ lat: 16.8409, lng: 96.1735, accuracyMeters: 12.4 });
+      expect(checkIn.status).toBe(201);
+      expect(checkIn.body.data.checkInLat).toBe(16.8409);
+      expect(checkIn.body.data.checkInLng).toBe(96.1735);
+      expect(checkIn.body.data.checkInAccuracyM).toBe(12);
+      expect(checkIn.body.data.locationSource).toBe("GPS");
+
+      const checkOut = await authed("post", "/api/v1/attendance/check-out", employeeToken)
+        .send({ lat: 16.841, lng: 96.1736, accuracyMeters: 8 });
+      expect(checkOut.status).toBe(200);
+      expect(checkOut.body.data.checkOutLat).toBe(16.841);
+      expect(checkOut.body.data.locationSource).toBe("GPS");
+    });
+
+    it("never blocks check-in/check-out when no location is sent", async () => {
+      const checkIn = await authed("post", "/api/v1/attendance/check-in", employeeToken);
+      expect(checkIn.status).toBe(201);
+      expect(checkIn.body.data.checkInLat).toBeNull();
+      expect(checkIn.body.data.locationSource).toBe("UNAVAILABLE");
+
+      const checkOut = await authed("post", "/api/v1/attendance/check-out", employeeToken);
+      expect(checkOut.status).toBe(200);
+      expect(checkOut.body.data.locationSource).toBe("UNAVAILABLE");
+    });
+
+    it("drops out-of-range or malformed coordinates instead of rejecting the request", async () => {
+      const res = await authed("post", "/api/v1/attendance/check-in", employeeToken)
+        .send({ lat: 999, lng: "not-a-number" });
+      expect(res.status).toBe(201);
+      expect(res.body.data.checkInLat).toBeNull();
+      expect(res.body.data.locationSource).toBe("UNAVAILABLE");
+
+      await authed("post", "/api/v1/attendance/check-out", employeeToken);
+    });
+
+    it("discards coordinates when the organization disables location capture", async () => {
+      await prisma.organization.update({
+        where: { id: organizationId },
+        data: { locationPolicy: "NONE" },
+      });
+
+      const res = await authed("post", "/api/v1/attendance/check-in", employeeToken)
+        .send({ lat: 16.8409, lng: 96.1735 });
+      expect(res.status).toBe(201);
+      expect(res.body.data.checkInLat).toBeNull();
+      expect(res.body.data.locationSource).toBe("UNAVAILABLE");
+
+      await authed("post", "/api/v1/attendance/check-out", employeeToken);
+      await prisma.organization.update({
+        where: { id: organizationId },
+        data: { locationPolicy: "LOG_ONLY" },
+      });
+    });
+  });
 });

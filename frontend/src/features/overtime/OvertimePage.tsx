@@ -11,8 +11,8 @@ export function OvertimePage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Overtime</h1>
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+        <h1 className="page-title">Overtime</h1>
+        <p className="page-subtitle">
           Requests, approval, and payable hours.
         </p>
       </div>

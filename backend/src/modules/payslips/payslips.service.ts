@@ -1,12 +1,13 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@database/prisma";
+import type { AuthContext } from "@common/auth/requireAuth";
 import { AppError } from "@common/errors/AppError";
 import { getEmployeeByUserId } from "@modules/employees/employees.service";
 import type { ListPayslipsQuery } from "@modules/payslips/payslips.schema";
 
 export interface PayslipRequester {
   userId: string;
-  role: "SUPER_ADMIN" | "HR_ADMIN" | "EMPLOYEE";
+  role: AuthContext["role"];
 }
 
 const PAYSLIP_INCLUDE = {
@@ -28,7 +29,7 @@ async function buildScopedPayrollItemWhere(
 ): Promise<Prisma.PayrollItemWhereInput> {
   const where: Prisma.PayrollItemWhereInput = { employee: { organizationId } };
 
-  if (requester.role === "EMPLOYEE") {
+  if (requester.role !== "HR_ADMIN" && requester.role !== "SUPER_ADMIN") {
     const employee = await getEmployeeByUserId(organizationId, requester.userId);
     where.employeeId = employee.id;
   } else if (employeeIdFilter) {

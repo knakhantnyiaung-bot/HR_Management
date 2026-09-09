@@ -23,7 +23,7 @@ function corsOrigin(): string[] {
   if (nodeEnv === "production") {
     throw new Error("Missing required environment variable: CORS_ORIGIN");
   }
-  return ["http://localhost:5173"];
+  return ["http://localhost:5174"];
 }
 
 export const env = {

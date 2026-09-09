@@ -134,6 +134,11 @@ describe("dashboard module", () => {
 
   afterAll(async () => {
     await prisma.auditLog.deleteMany({ where: { organizationId } });
+    // Sprint 2 — leave/overtime/payroll approvals now emit notification
+    // outbox rows tied to this organizationId; must clear them before
+    // deleting the organization below (FK constraint).
+    await prisma.notification.deleteMany({ where: { organizationId } });
+    await prisma.notificationEvent.deleteMany({ where: { organizationId } });
     await prisma.payslip.deleteMany({ where: { payrollItem: { employee: { organizationId } } } });
     await prisma.payrollItem.deleteMany({ where: { employee: { organizationId } } });
     await prisma.payrollRun.deleteMany({ where: { organizationId } });

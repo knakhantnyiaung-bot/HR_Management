@@ -29,7 +29,7 @@ services:
       DATABASE_URL: postgresql://hr_payroll:hr_payroll_dev@postgres:5432/hr_payroll?schema=public
       JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-8h}
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5174}
       DEFAULT_TIMEZONE: ${DEFAULT_TIMEZONE:-Asia/Yangon}
       DEFAULT_CURRENCY: ${DEFAULT_CURRENCY:-MMK}
     ports:
@@ -46,7 +46,7 @@ services:
     container_name: hr_payroll_frontend
     restart: unless-stopped
     ports:
-      - "5173:80"
+      - "5174:80"
     depends_on:
       - backend
 
