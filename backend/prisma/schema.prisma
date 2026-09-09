@@ -107,6 +107,17 @@ enum ExpenseClaimStatus {
   CANCELLED
 }
 
+// EXP-09..11 — how a standalone (non-payroll-cycle) reimbursement was paid.
+// Recorded manually by HR in Sprint 3 Wave 1; Wave 3's bank disbursement
+// integration is expected to fill these same fields from a real API
+// response instead (Sprint 3 HLD §7), so no schema change there.
+enum DisbursementMethod {
+  BANK_TRANSFER
+  CHEQUE
+  CASH
+  OTHER
+}
+
 enum JobPostingStatus {
   DRAFT
   OPEN
@@ -617,20 +628,28 @@ model ExpenseCategory {
 // deliberately not unique — every approved claim reimbursed in the same
 // employee/period payroll calculation shares one PayrollItem snapshot.
 model ExpenseClaim {
-  id              String             @id @default(uuid())
-  organizationId  String             @map("organization_id")
-  employeeId      String             @map("employee_id")
-  categoryId      String             @map("category_id")
-  amount          Decimal            @db.Decimal(14, 2)
-  expenseDate     DateTime           @map("expense_date") @db.Date
-  description     String?
-  status          ExpenseClaimStatus @default(DRAFT)
-  rejectionReason String?            @map("rejection_reason")
-  approvedBy      String?            @map("approved_by")
-  approvedAt      DateTime?          @map("approved_at")
-  payrollItemId   String?            @map("payroll_item_id")
-  createdAt       DateTime           @default(now()) @map("created_at")
-  updatedAt       DateTime           @updatedAt @map("updated_at")
+  id                    String              @id @default(uuid())
+  organizationId        String              @map("organization_id")
+  employeeId            String              @map("employee_id")
+  categoryId            String              @map("category_id")
+  amount                Decimal             @db.Decimal(14, 2)
+  expenseDate           DateTime            @map("expense_date") @db.Date
+  description           String?
+  status                ExpenseClaimStatus  @default(DRAFT)
+  rejectionReason       String?             @map("rejection_reason")
+  approvedBy            String?             @map("approved_by")
+  approvedAt            DateTime?           @map("approved_at")
+  payrollItemId         String?             @map("payroll_item_id")
+  // EXP-09..11 — set only when a claim is reimbursed standalone (outside a
+  // payroll run), mutually exclusive with payrollItemId: exactly one of the
+  // two paths to REIMBURSED applies to a given claim, enforced in
+  // expenses.service.ts.
+  disbursementMethod    DisbursementMethod? @map("disbursement_method")
+  disbursementReference String?             @map("disbursement_reference")
+  disbursedAt           DateTime?           @map("disbursed_at")
+  disbursedBy           String?             @map("disbursed_by")
+  createdAt             DateTime            @default(now()) @map("created_at")
+  updatedAt             DateTime            @updatedAt @map("updated_at")
 
   organization Organization     @relation(fields: [organizationId], references: [id])
   employee     Employee         @relation(fields: [employeeId], references: [id])

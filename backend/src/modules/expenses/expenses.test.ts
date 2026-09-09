@@ -143,4 +143,90 @@ describe("expenses module", () => {
     expect(reimbursedClaim.status).toBe("REIMBURSED");
     expect(reimbursedClaim.payrollItemId).not.toBeNull();
   });
+
+  describe("standalone reimbursement (EXP-09..11)", () => {
+    async function createApprovedClaim(expenseDate: string) {
+      const claim = await authed("post", "/api/v1/expenses/claims", employeeToken).send({
+        categoryId,
+        amount: 15_000,
+        expenseDate,
+        description: "Office supplies",
+      });
+      const claimId = claim.body.data.id;
+
+      await request(app)
+        .post(`/api/v1/expenses/claims/${claimId}/receipts`)
+        .set("Authorization", `Bearer ${employeeToken}`)
+        .attach("files", Buffer.from("%PDF-1.4 fake receipt"), "receipt.pdf");
+      await authed("post", `/api/v1/expenses/claims/${claimId}/submit`, employeeToken);
+      await authed("post", `/api/v1/expenses/claims/${claimId}/approve`, hrToken);
+
+      return claimId;
+    }
+
+    it("reimburses an approved claim standalone, with no payroll run in the period", async () => {
+      const claimId = await createApprovedClaim(`${PERIOD}-12`);
+
+      const employeeAttempt = await authed(
+        "post",
+        `/api/v1/expenses/claims/${claimId}/reimburse`,
+        employeeToken,
+      ).send({ disbursementMethod: "BANK_TRANSFER", disbursementReference: "TXN-001" });
+      expect(employeeAttempt.status).toBe(403);
+
+      const reimburse = await authed(
+        "post",
+        `/api/v1/expenses/claims/${claimId}/reimburse`,
+        hrToken,
+      ).send({ disbursementMethod: "BANK_TRANSFER", disbursementReference: "TXN-001" });
+      expect(reimburse.status).toBe(200);
+      expect(reimburse.body.data.status).toBe("REIMBURSED");
+
+      const claim = await prisma.expenseClaim.findUniqueOrThrow({ where: { id: claimId } });
+      expect(claim.payrollItemId).toBeNull();
+      expect(claim.disbursementMethod).toBe("BANK_TRANSFER");
+      expect(claim.disbursementReference).toBe("TXN-001");
+      expect(claim.disbursedAt).not.toBeNull();
+    });
+
+    it("rejects reimbursing a claim that isn't APPROVED", async () => {
+      const claim = await authed("post", "/api/v1/expenses/claims", employeeToken).send({
+        categoryId,
+        amount: 5_000,
+        expenseDate: `${PERIOD}-13`,
+        description: "Draft claim",
+      });
+
+      const reimburse = await authed(
+        "post",
+        `/api/v1/expenses/claims/${claim.body.data.id}/reimburse`,
+        hrToken,
+      ).send({ disbursementMethod: "CASH", disbursementReference: "N/A" });
+      expect(reimburse.status).toBe(409);
+      expect(reimburse.body.error.code).toBe("INVALID_STATUS_TRANSITION");
+    });
+
+    it("rejects reimbursing a claim already attached to a payroll run", async () => {
+      // A distinct period from PERIOD — the "full lifecycle" test above
+      // already created and calculated a run for PERIOD, and a payroll run
+      // is unique per period per org.
+      const otherPeriod = "2026-12";
+      const claimId = await createApprovedClaim(`${otherPeriod}-14`);
+
+      const run = await authed("post", "/api/v1/payroll/runs", hrToken).send({ period: otherPeriod });
+      await authed("post", `/api/v1/payroll/runs/${run.body.data.id}/calculate`, hrToken);
+
+      const claim = await prisma.expenseClaim.findUniqueOrThrow({ where: { id: claimId } });
+      expect(claim.status).toBe("REIMBURSED");
+      expect(claim.payrollItemId).not.toBeNull();
+
+      const reimburse = await authed(
+        "post",
+        `/api/v1/expenses/claims/${claimId}/reimburse`,
+        hrToken,
+      ).send({ disbursementMethod: "CASH", disbursementReference: "N/A" });
+      expect(reimburse.status).toBe(409);
+      expect(reimburse.body.error.code).toBe("INVALID_STATUS_TRANSITION");
+    });
+  });
 });

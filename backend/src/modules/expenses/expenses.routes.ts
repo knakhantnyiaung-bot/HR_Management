@@ -10,6 +10,7 @@ import {
   downloadExpenseReceiptHandler,
   listExpenseCategoriesHandler,
   listExpenseClaimsHandler,
+  reimburseExpenseClaimHandler,
   rejectExpenseClaimHandler,
   submitExpenseClaimHandler,
   updateExpenseClaimHandler,
@@ -46,6 +47,13 @@ expensesRouter.post(
   requireAuth,
   requireRole(...HR_ROLES),
   asyncHandler(rejectExpenseClaimHandler),
+);
+// EXP-09..11 — reimburse an APPROVED claim outside a payroll run.
+expensesRouter.post(
+  "/claims/:id/reimburse",
+  requireAuth,
+  requireRole(...HR_ROLES),
+  asyncHandler(reimburseExpenseClaimHandler),
 );
 
 expensesRouter.post(

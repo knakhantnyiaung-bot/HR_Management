@@ -11,6 +11,7 @@ import type {
   CreateExpenseCategoryInput,
   CreateExpenseClaimInput,
   ListExpenseClaimsQuery,
+  ReimburseExpenseClaimInput,
   UpdateExpenseClaimInput,
 } from "@modules/expenses/expenses.schema";
 
@@ -364,6 +365,72 @@ export const rejectExpenseClaim = (
   actorId: string,
   reason: string,
 ) => decideExpenseClaim(organizationId, claimId, actorId, ExpenseClaimStatus.REJECTED, reason);
+
+// EXP-09..11 — HR Admin/Super Admin only (enforced at the route level).
+// Reimburses an APPROVED claim directly, independent of any payroll run —
+// the whole point being that reimbursement no longer has to wait for the
+// next payroll cycle. Mutually exclusive with the existing payroll-cycle
+// path: payroll.service.ts only ever sets REIMBURSED and payrollItemId
+// together, so the status check below is sufficient to reject a claim
+// that was already reimbursed that way — there's no APPROVED-with-
+// payrollItemId-set state to separately guard against.
+export async function reimburseExpenseClaim(
+  organizationId: string,
+  claimId: string,
+  actorId: string,
+  input: ReimburseExpenseClaimInput,
+) {
+  return prisma.$transaction(async (tx) => {
+    const locked = await lockExpenseClaim(tx, organizationId, claimId);
+
+    if (locked.status !== ExpenseClaimStatus.APPROVED) {
+      throw AppError.conflict(
+        "INVALID_STATUS_TRANSITION",
+        `Cannot reimburse an expense claim in status ${locked.status}`,
+      );
+    }
+
+    await tx.expenseClaim.update({
+      where: { id: claimId },
+      data: {
+        status: ExpenseClaimStatus.REIMBURSED,
+        disbursementMethod: input.disbursementMethod,
+        disbursementReference: input.disbursementReference,
+        disbursedAt: new Date(),
+        disbursedBy: actorId,
+      },
+    });
+
+    await recordAudit(
+      {
+        organizationId,
+        actorId,
+        action: "EXPENSE_CLAIM_REIMBURSED",
+        resourceType: "ExpenseClaim",
+        resourceId: claimId,
+        metadata: {
+          disbursementMethod: input.disbursementMethod,
+          disbursementReference: input.disbursementReference,
+        },
+      },
+      tx,
+    );
+
+    const claim = await reloadExpenseClaim(tx, claimId);
+
+    // NOTIF-04 — link back only, never the amount or disbursement reference.
+    await emitNotificationEvent(tx, {
+      organizationId,
+      eventType: "expense.claim.reimbursed",
+      recipientUserIds: [claim.employee.userId],
+      data: { categoryName: claim.category.name },
+      relatedResourceType: "ExpenseClaim",
+      relatedResourceId: claimId,
+    });
+
+    return claim;
+  });
+}
 
 // ---------------------------------------------------------------------------
 // Receipts — Sec 13.3 / DB2-06

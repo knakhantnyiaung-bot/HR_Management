@@ -9,6 +9,7 @@ export type NotificationEventType =
   | "overtime.request.decided"
   | "payroll.run.released"
   | "expense.claim.decided"
+  | "expense.claim.reimbursed"
   | "recruitment.interview.scheduled"
   | "recruitment.offer.responded";
 
@@ -53,6 +54,11 @@ const TEMPLATES: Record<NotificationEventType, TemplateFn> = {
     title: "Expense claim decided",
     inAppMessage: `Your ${str(p, "categoryName")} expense claim was ${str(p, "status").toLowerCase()}.`,
     emailBody: "One of your expense claims has been decided. Open the app to see the result.",
+  }),
+  "expense.claim.reimbursed": (p) => ({
+    title: "Expense claim reimbursed",
+    inAppMessage: `Your ${str(p, "categoryName")} expense claim has been reimbursed.`,
+    emailBody: "One of your expense claims has been reimbursed. Open the app to see the result.",
   }),
   "recruitment.interview.scheduled": (p) => ({
     title: "Interview scheduled",

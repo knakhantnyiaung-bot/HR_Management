@@ -21,6 +21,8 @@ export interface ExpenseReceipt {
   createdAt: string;
 }
 
+export type DisbursementMethod = "BANK_TRANSFER" | "CHEQUE" | "CASH" | "OTHER";
+
 export interface ExpenseClaim {
   id: string;
   amount: string;
@@ -28,6 +30,9 @@ export interface ExpenseClaim {
   description: string | null;
   status: ExpenseClaimStatus;
   rejectionReason: string | null;
+  disbursementMethod: DisbursementMethod | null;
+  disbursementReference: string | null;
+  disbursedAt: string | null;
   createdAt: string;
   employee: { id: string; employeeNo: string; user: { email: string } };
   category: { id: string; name: string; requiresReceipt: boolean };

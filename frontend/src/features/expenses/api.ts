@@ -1,6 +1,11 @@
 import { apiClient, type ApiSuccess } from "@/lib/api/client";
 import type { ListResult } from "@/lib/api/types";
-import type { ExpenseCategory, ExpenseClaim, ExpenseClaimStatus } from "@/features/expenses/types";
+import type {
+  DisbursementMethod,
+  ExpenseCategory,
+  ExpenseClaim,
+  ExpenseClaimStatus,
+} from "@/features/expenses/types";
 
 export async function listExpenseCategories(): Promise<ExpenseCategory[]> {
   const res = await apiClient.get<ApiSuccess<ExpenseCategory[]>>("/expenses/categories");
@@ -59,6 +64,18 @@ export async function approveExpenseClaim(id: string): Promise<ExpenseClaim> {
 export async function rejectExpenseClaim(id: string, reason: string): Promise<ExpenseClaim> {
   const res = await apiClient.post<ApiSuccess<ExpenseClaim>>(`/expenses/claims/${id}/reject`, {
     reason,
+  });
+  return res.data.data;
+}
+
+export async function reimburseExpenseClaim(
+  id: string,
+  disbursementMethod: DisbursementMethod,
+  disbursementReference: string,
+): Promise<ExpenseClaim> {
+  const res = await apiClient.post<ApiSuccess<ExpenseClaim>>(`/expenses/claims/${id}/reimburse`, {
+    disbursementMethod,
+    disbursementReference,
   });
   return res.data.data;
 }

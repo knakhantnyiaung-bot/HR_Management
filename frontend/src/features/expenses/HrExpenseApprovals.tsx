@@ -9,11 +9,13 @@ import {
   createExpenseCategory,
   listExpenseCategories,
   listExpenseClaims,
+  reimburseExpenseClaim,
   rejectExpenseClaim,
 } from "@/features/expenses/api";
-import type { ExpenseClaimStatus } from "@/features/expenses/types";
+import type { DisbursementMethod, ExpenseClaimStatus } from "@/features/expenses/types";
 
 const PAGE_SIZE = 20;
+const DISBURSEMENT_METHODS: DisbursementMethod[] = ["BANK_TRANSFER", "CHEQUE", "CASH", "OTHER"];
 const STATUS_OPTIONS: ExpenseClaimStatus[] = [
   "DRAFT",
   "SUBMITTED",
@@ -50,6 +52,18 @@ export function HrExpenseApprovals() {
     mutationFn: ({ id, reason }: { id: string; reason: string }) => rejectExpenseClaim(id, reason),
     onSuccess: invalidate,
   });
+  const reimburseMutation = useMutation({
+    mutationFn: ({
+      id,
+      method,
+      reference,
+    }: {
+      id: string;
+      method: DisbursementMethod;
+      reference: string;
+    }) => reimburseExpenseClaim(id, method, reference),
+    onSuccess: invalidate,
+  });
   const createCategoryMutation = useMutation({
     mutationFn: createExpenseCategory,
     onSuccess: () => {
@@ -66,7 +80,28 @@ export function HrExpenseApprovals() {
     }
   }
 
-  const actionError = approveMutation.error ?? rejectMutation.error;
+  // EXP-09..11 — reimburse an APPROVED claim outside the payroll cycle.
+  // Two sequential prompts, same lightweight pattern as handleReject above
+  // rather than a dedicated modal.
+  function handleReimburse(id: string) {
+    const methodInput = window.prompt(
+      `Disbursement method (${DISBURSEMENT_METHODS.join(" / ")}):`,
+      "BANK_TRANSFER",
+    );
+    if (!methodInput) return;
+    const method = methodInput.trim().toUpperCase() as DisbursementMethod;
+    if (!DISBURSEMENT_METHODS.includes(method)) {
+      window.alert(`Invalid method. Must be one of: ${DISBURSEMENT_METHODS.join(", ")}`);
+      return;
+    }
+
+    const reference = window.prompt("Disbursement reference (e.g. bank transfer no., cheque no.):");
+    if (reference && reference.trim()) {
+      reimburseMutation.mutate({ id, method, reference: reference.trim() });
+    }
+  }
+
+  const actionError = approveMutation.error ?? rejectMutation.error ?? reimburseMutation.error;
 
   return (
     <div className="space-y-8">
@@ -218,6 +253,21 @@ export function HrExpenseApprovals() {
                             Reject
                           </button>
                         </div>
+                      )}
+                      {claim.status === "APPROVED" && (
+                        <button
+                          type="button"
+                          onClick={() => handleReimburse(claim.id)}
+                          disabled={reimburseMutation.isPending}
+                          className="text-sm font-medium text-success-700 hover:underline disabled:opacity-50 dark:text-success-400"
+                        >
+                          Mark reimbursed
+                        </button>
+                      )}
+                      {claim.status === "REIMBURSED" && claim.disbursementReference && (
+                        <span className="text-xs text-slate-500 dark:text-slate-400">
+                          {claim.disbursementMethod} · {claim.disbursementReference}
+                        </span>
                       )}
                     </td>
                   </tr>

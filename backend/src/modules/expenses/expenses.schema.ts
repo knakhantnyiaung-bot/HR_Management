@@ -1,3 +1,4 @@
+import { DisbursementMethod } from "@prisma/client";
 import { z } from "zod";
 
 export const createExpenseCategorySchema = z.object({
@@ -35,6 +36,14 @@ export const rejectExpenseClaimSchema = z.object({
 });
 
 export type RejectExpenseClaimInput = z.infer<typeof rejectExpenseClaimSchema>;
+
+// EXP-09..11 — standalone reimbursement, recorded outside a payroll run.
+export const reimburseExpenseClaimSchema = z.object({
+  disbursementMethod: z.nativeEnum(DisbursementMethod),
+  disbursementReference: z.string().min(1, "A disbursement reference is required"),
+});
+
+export type ReimburseExpenseClaimInput = z.infer<typeof reimburseExpenseClaimSchema>;
 
 export const listExpenseClaimsQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),

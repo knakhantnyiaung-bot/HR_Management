@@ -5,6 +5,7 @@ import {
   createExpenseCategorySchema,
   createExpenseClaimSchema,
   listExpenseClaimsQuerySchema,
+  reimburseExpenseClaimSchema,
   rejectExpenseClaimSchema,
   updateExpenseClaimSchema,
 } from "@modules/expenses/expenses.schema";
@@ -17,6 +18,7 @@ import {
   getExpenseReceiptForDownload,
   listExpenseCategories,
   listExpenseClaims,
+  reimburseExpenseClaim,
   rejectExpenseClaim,
   submitExpenseClaim,
   updateExpenseClaim,
@@ -79,6 +81,13 @@ export async function rejectExpenseClaimHandler(req: Request, res: Response): Pr
   const { organizationId, userId } = requireAuthContext(req);
   const input = rejectExpenseClaimSchema.parse(req.body);
   const claim = await rejectExpenseClaim(organizationId, requireIdParam(req), userId, input.reason);
+  res.json({ success: true, data: claim });
+}
+
+export async function reimburseExpenseClaimHandler(req: Request, res: Response): Promise<void> {
+  const { organizationId, userId } = requireAuthContext(req);
+  const input = reimburseExpenseClaimSchema.parse(req.body);
+  const claim = await reimburseExpenseClaim(organizationId, requireIdParam(req), userId, input);
   res.json({ success: true, data: claim });
 }
 
