@@ -23,6 +23,7 @@ import { expensesRouter } from "@modules/expenses/expenses.routes";
 import { recruitmentRouter } from "@modules/recruitment/recruitment.routes";
 import { candidatePortalRouter, careersRouter } from "@modules/careers/careers.routes";
 import { calendarIntegrationRouter } from "@modules/calendar/calendar.routes";
+import { assetsRouter } from "@modules/assets/assets.routes";
 
 import { env } from "@config/env";
 import { errorHandler } from "@common/middleware/errorHandler";
@@ -83,6 +84,8 @@ export function createApp() {
   // separate auth system from everything else mounted here.
   v1.use("/careers", careersRouter);
   v1.use("/candidate-portal", candidatePortalRouter);
+  // Sprint 3 Wave 2.
+  v1.use("/assets", assetsRouter);
 
   app.use("/api/v1", v1);
 

@@ -11,7 +11,8 @@ export type NotificationEventType =
   | "expense.claim.decided"
   | "expense.claim.reimbursed"
   | "recruitment.interview.scheduled"
-  | "recruitment.offer.responded";
+  | "recruitment.offer.responded"
+  | "asset.employee_terminated_with_assets";
 
 export interface RenderedNotification {
   title: string;
@@ -80,6 +81,15 @@ const TEMPLATES: Record<NotificationEventType, TemplateFn> = {
     inAppMessage: `${str(p, "candidateName")} ${str(p, "status").toLowerCase()} the offer.`,
     emailBody: "A candidate has responded to an offer. Open the app for details.",
     smsBody: "A candidate has responded to an offer. Open the app for details.",
+  }),
+  // ASSET-08 — a flag, not a block: the employee is already terminated by
+  // the time this fires. Deliberately no asset count/names in the body
+  // (NOTIF-04-style minimalism) — open the app for the actual list.
+  "asset.employee_terminated_with_assets": (p) => ({
+    title: "Terminated employee has unreturned assets",
+    inAppMessage: `${str(p, "employeeName")} was terminated with ${str(p, "assetCount")} asset(s) still assigned. Open the app to process returns.`,
+    emailBody: "A terminated employee still has company assets assigned. Open the app for details.",
+    smsBody: "A terminated employee still has company assets assigned. Open the app for details.",
   }),
 };
 

@@ -4,6 +4,9 @@ import { EmployeeStatus, Prisma, type WorkModel } from "@prisma/client";
 import { prisma } from "@database/prisma";
 import { AppError } from "@common/errors/AppError";
 import { recordAudit } from "@modules/audit/audit.service";
+import { countActiveAssignmentsForEmployee } from "@modules/assets/assets.service";
+import { emitNotificationEvent } from "@modules/notifications/notification.emitter";
+import { getHrAdminUserIds } from "@modules/notifications/notification.recipients";
 import type {
   CreateEmployeeInput,
   ListEmployeesQuery,
@@ -311,6 +314,22 @@ async function transitionEmployeeStatus(
       },
       tx,
     );
+
+    // ASSET-08 — a flag, not a block: termination itself is never gated on
+    // asset returns (see assets.service.ts's countActiveAssignmentsForEmployee).
+    if (target === EmployeeStatus.TERMINATED) {
+      const assignedAssetCount = await countActiveAssignmentsForEmployee(tx, employeeId);
+      if (assignedAssetCount > 0) {
+        await emitNotificationEvent(tx, {
+          organizationId,
+          eventType: "asset.employee_terminated_with_assets",
+          recipientUserIds: await getHrAdminUserIds(tx, organizationId),
+          data: { employeeName: `${updated.employeeNo} (${updated.user.email})`, assetCount: String(assignedAssetCount) },
+          relatedResourceType: "Employee",
+          relatedResourceId: employeeId,
+        });
+      }
+    }
 
     return updated;
   });

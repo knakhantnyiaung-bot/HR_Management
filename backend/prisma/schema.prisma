@@ -118,6 +118,32 @@ enum DisbursementMethod {
   OTHER
 }
 
+// ---------------------------------------------------------------------------
+// Sprint 3 Wave 2 enums — Handbook ASSET-*
+// ---------------------------------------------------------------------------
+
+// ASSET-01 — IT/company equipment only (Wave 2 scope decision); a plain
+// enum rather than an HR-managed master-data model like ExpenseCategory,
+// since the category set itself isn't expected to change.
+enum AssetCategory {
+  LAPTOP
+  MONITOR
+  PHONE
+  PERIPHERAL
+  FURNITURE
+  OTHER
+}
+
+// ASSET-03..05 — ASSIGNED is only ever reached via the assign action (never
+// a direct PATCH), and only ever left via the return action or a direct
+// PATCH to IN_REPAIR/RETIRED after returning — see assets.service.ts.
+enum AssetStatus {
+  AVAILABLE
+  ASSIGNED
+  IN_REPAIR
+  RETIRED
+}
+
 enum JobPostingStatus {
   DRAFT
   OPEN
@@ -197,6 +223,7 @@ model Organization {
   jobPostings         JobPosting[]
   candidates          Candidate[]
   calendarIntegration CalendarIntegration?
+  assets              Asset[]
 
   @@map("organizations")
 }
@@ -300,6 +327,8 @@ model Employee {
   salaryProfiles    SalaryProfile[]
   payrollItems      PayrollItem[]
   expenseClaims     ExpenseClaim[]
+  currentAssets     Asset[]            @relation("CurrentAssetHolder")
+  assetAssignments  AssetAssignment[]  @relation("AssetAssignmentHistory")
 
   @@unique([organizationId, employeeNo])
   @@index([organizationId])
@@ -894,4 +923,58 @@ model Offer {
 
   @@index([applicationId])
   @@map("offers")
+}
+
+// ---------------------------------------------------------------------------
+// Sprint 3 Wave 2 — Asset Management (Handbook ASSET-*)
+// ---------------------------------------------------------------------------
+
+// ASSET-01..08 — currentEmployeeId is denormalized current-state (mirrors
+// ExpenseClaim.payrollItemId's "who/what right now" role), kept in sync
+// with status by assets.service.ts's assign/return actions only; every
+// assignment (past and present) is still recorded in AssetAssignment, the
+// historical log. No depreciation/valuation fields — Wave 2 scope is
+// inventory + assign/return only (Sprint 3 HLD Appendix A).
+model Asset {
+  id                String        @id @default(uuid())
+  organizationId    String        @map("organization_id")
+  assetTag          String        @map("asset_tag")
+  name              String
+  category          AssetCategory @default(OTHER)
+  serialNumber      String?       @map("serial_number")
+  notes             String?
+  status            AssetStatus   @default(AVAILABLE)
+  currentEmployeeId String?       @map("current_employee_id")
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+
+  organization    Organization      @relation(fields: [organizationId], references: [id])
+  currentEmployee Employee?         @relation("CurrentAssetHolder", fields: [currentEmployeeId], references: [id])
+  assignments     AssetAssignment[]
+
+  @@unique([organizationId, assetTag])
+  @@index([organizationId])
+  @@index([currentEmployeeId])
+  @@map("assets")
+}
+
+// One row per assign/return cycle — the historical log. assignedBy/
+// returnedBy are unlinked User.id strings, same "record who without a
+// Prisma relation" choice as ExpenseClaim.approvedBy.
+model AssetAssignment {
+  id         String    @id @default(uuid())
+  assetId    String    @map("asset_id")
+  employeeId String    @map("employee_id")
+  assignedAt DateTime  @default(now()) @map("assigned_at")
+  assignedBy String    @map("assigned_by")
+  returnedAt DateTime? @map("returned_at")
+  returnedBy String?   @map("returned_by")
+  notes      String?
+
+  asset    Asset    @relation(fields: [assetId], references: [id])
+  employee Employee @relation("AssetAssignmentHistory", fields: [employeeId], references: [id])
+
+  @@index([assetId])
+  @@index([employeeId])
+  @@map("asset_assignments")
 }

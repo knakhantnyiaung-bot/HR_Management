@@ -13,6 +13,7 @@ import {
   LogOut,
   Mail,
   Menu,
+  Package,
   Receipt,
   Settings,
   Timer,
@@ -173,6 +174,7 @@ export function AppLayout() {
       { to: "/overtime", label: "Overtime", icon: Timer },
       { to: "/payslips", label: "Payslips", icon: FileText },
       { to: "/expenses", label: "Expenses", icon: Receipt },
+      { to: "/assets", label: "Assets", icon: Package },
     );
   }
   if (isHrRole || user?.role === "HIRING_MANAGER") {
