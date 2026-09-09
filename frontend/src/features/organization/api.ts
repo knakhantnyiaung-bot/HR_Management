@@ -1,6 +1,12 @@
 import { apiClient, type ApiSuccess } from "@/lib/api/client";
 import type { ListResult } from "@/lib/api/types";
-import type { Department, Organization, OrgStructureStatus, Position } from "@/features/organization/types";
+import type {
+  CalendarIntegrationStatus,
+  Department,
+  Organization,
+  OrgStructureStatus,
+  Position,
+} from "@/features/organization/types";
 
 // Reference data for select inputs elsewhere (employee forms, filters) — a
 // flat org has few enough departments/positions that one page covers it.
@@ -92,4 +98,25 @@ export interface UpdatePositionInput {
 export async function updatePosition(id: string, input: UpdatePositionInput): Promise<Position> {
   const res = await apiClient.patch<ApiSuccess<Position>>(`/positions/${id}`, input);
   return res.data.data;
+}
+
+// CAL-01..07
+export async function getCalendarIntegrationStatus(): Promise<CalendarIntegrationStatus> {
+  const res = await apiClient.get<ApiSuccess<CalendarIntegrationStatus>>(
+    "/organization/calendar-integration",
+  );
+  return res.data.data;
+}
+
+// The frontend does a real top-level navigation to this URL (window.location
+// = url), not an XHR follow — Google's consent screen has to render.
+export async function getCalendarConnectUrl(): Promise<string> {
+  const res = await apiClient.get<ApiSuccess<{ url: string }>>(
+    "/organization/calendar-integration/connect-url",
+  );
+  return res.data.data.url;
+}
+
+export async function disconnectCalendarIntegration(): Promise<void> {
+  await apiClient.delete("/organization/calendar-integration");
 }

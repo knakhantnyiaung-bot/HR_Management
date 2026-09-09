@@ -5,6 +5,7 @@ import type {
   CandidateApplicationStage,
   Interview,
   InterviewMode,
+  Interviewer,
   JobPosting,
   JobPostingStatus,
   Offer,
@@ -149,7 +150,7 @@ export async function assignHiringManager(
 export interface CreateInterviewInput {
   scheduledAt: string;
   mode: InterviewMode;
-  interviewerNames?: string;
+  interviewers: Interviewer[];
 }
 
 export async function createInterview(
@@ -166,7 +167,14 @@ export async function createInterview(
 export async function updateInterview(
   applicationId: string,
   interviewId: string,
-  input: { feedback?: string; score?: number; status?: string },
+  input: {
+    scheduledAt?: string;
+    mode?: InterviewMode;
+    interviewers?: Interviewer[];
+    feedback?: string;
+    score?: number;
+    status?: string;
+  },
 ): Promise<Interview> {
   const res = await apiClient.patch<ApiSuccess<Interview>>(
     `/recruitment/applications/${applicationId}/interviews/${interviewId}`,

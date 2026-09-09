@@ -33,11 +33,19 @@ export interface Candidate {
 export type InterviewMode = "ONSITE" | "REMOTE";
 export type InterviewStatus = "SCHEDULED" | "COMPLETED" | "CANCELLED";
 
+export interface Interviewer {
+  name: string;
+  email?: string;
+}
+
 export interface Interview {
   id: string;
   scheduledAt: string;
   mode: InterviewMode;
-  interviewerNames: string | null;
+  interviewers: Interviewer[];
+  // Set once a Google Calendar event exists for this interview (CAL-01..07)
+  // — null if the org has no calendar integration connected.
+  calendarEventId: string | null;
   feedback: string | null;
   score: number | null;
   status: InterviewStatus;

@@ -23,3 +23,8 @@ export interface Organization {
   careersSlug: string | null;
   careersEnabled: boolean;
 }
+
+// CAL-01..07
+export type CalendarIntegrationStatus =
+  | { connected: false }
+  | { connected: true; provider: string; calendarId: string; connectedAt: string };

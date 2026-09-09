@@ -24,14 +24,13 @@ import {
   updateApplicationStage,
   updateInterview,
 } from "@/features/recruitment/api";
-import type { CandidateApplicationStage, InterviewMode } from "@/features/recruitment/types";
+import type { CandidateApplicationStage, Interview, Interviewer } from "@/features/recruitment/types";
 
 const HR_ROLES = new Set(["HR_ADMIN", "SUPER_ADMIN"]);
 
 const interviewSchema = z.object({
   scheduledAt: z.string().min(1, "Required"),
   mode: z.enum(["ONSITE", "REMOTE"]),
-  interviewerNames: z.string().optional(),
 });
 type InterviewForm = z.infer<typeof interviewSchema>;
 
@@ -88,16 +87,23 @@ export function ApplicationDetailPage() {
     reset: resetInterviewForm,
     formState: { errors: interviewErrors },
   } = useForm<InterviewForm>({ resolver: zodResolver(interviewSchema), defaultValues: { mode: "ONSITE" } });
+  // CAL-01..07 — email is what lets a connected Google Calendar event add
+  // real attendees; plain component state (not react-hook-form-managed),
+  // same pattern as the geofence polygon-point editor.
+  const [interviewers, setInterviewers] = useState<Interviewer[]>([{ name: "", email: "" }]);
   const createInterviewMutation = useMutation({
     mutationFn: (values: InterviewForm) =>
       createInterview(applicationId, {
         scheduledAt: new Date(values.scheduledAt).toISOString(),
         mode: values.mode,
-        interviewerNames: values.interviewerNames || undefined,
+        interviewers: interviewers
+          .filter((i) => i.name.trim() !== "")
+          .map((i) => ({ name: i.name.trim(), email: i.email?.trim() || undefined })),
       }),
     onSuccess: () => {
       invalidate();
       resetInterviewForm();
+      setInterviewers([{ name: "", email: "" }]);
     },
   });
 
@@ -301,12 +307,58 @@ export function ApplicationDetailPage() {
                 ]}
                 error={interviewErrors.mode?.message}
               />
-              <TextField
-                label="Interviewers (optional)"
-                registration={registerInterview("interviewerNames")}
-                error={interviewErrors.interviewerNames?.message}
-              />
             </div>
+
+            <div>
+              <span className="label-field">Interviewers (optional)</span>
+              <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
+                An email is needed to add someone as a Google Calendar attendee — name alone still
+                shows on the interview record.
+              </p>
+              <div className="mt-2 space-y-2">
+                {interviewers.map((interviewer, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <input
+                      value={interviewer.name}
+                      onChange={(e) => {
+                        const next = [...interviewers];
+                        next[index] = { ...next[index], name: e.target.value };
+                        setInterviewers(next);
+                      }}
+                      placeholder="Name"
+                      className="input-field-inset flex-1"
+                    />
+                    <input
+                      value={interviewer.email ?? ""}
+                      onChange={(e) => {
+                        const next = [...interviewers];
+                        next[index] = { ...next[index], email: e.target.value };
+                        setInterviewers(next);
+                      }}
+                      placeholder="Email (optional)"
+                      type="email"
+                      className="input-field-inset flex-1"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setInterviewers(interviewers.filter((_, i) => i !== index))}
+                      disabled={interviewers.length === 1}
+                      className="btn-text text-danger-600 disabled:opacity-50 dark:text-danger-400"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setInterviewers([...interviewers, { name: "", email: "" }])}
+                  className="btn-text"
+                >
+                  + Add interviewer
+                </button>
+              </div>
+            </div>
+
             {createInterviewMutation.isError && (
               <p className="error-text">
                 {getApiErrorMessage(createInterviewMutation.error, "Could not schedule the interview.")}
@@ -442,7 +494,7 @@ function InterviewRow({
   onSaved,
 }: {
   applicationId: string;
-  interview: { id: string; scheduledAt: string; mode: InterviewMode; feedback: string | null; score: number | null; status: string };
+  interview: Interview;
   onSaved: () => void;
 }) {
   const [feedback, setFeedback] = useState(interview.feedback ?? "");
@@ -460,10 +512,24 @@ function InterviewRow({
   return (
     <li className="space-y-2 py-3">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-slate-900 dark:text-slate-100">
-          {formatDateTime(interview.scheduledAt)} &middot; {interview.mode}
-        </p>
-        <StatusBadge status={interview.status} />
+        <div>
+          <p className="text-sm text-slate-900 dark:text-slate-100">
+            {formatDateTime(interview.scheduledAt)} &middot; {interview.mode}
+          </p>
+          {interview.interviewers.length > 0 && (
+            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+              {interview.interviewers.map((i) => i.name).join(", ")}
+            </p>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          {interview.calendarEventId && (
+            <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
+              On Google Calendar
+            </span>
+          )}
+          <StatusBadge status={interview.status} />
+        </div>
       </div>
       <div className="flex items-center gap-3">
         <input

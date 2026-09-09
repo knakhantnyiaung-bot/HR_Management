@@ -51,4 +51,19 @@ export const env = {
   // unavailable for this deployment, same "opt-in feature, not required to
   // run the app" treatment as calendar/bank integrations in later waves.
   vapidPublicKey: process.env.VAPID_PUBLIC_KEY,
+  // CAL-01..07 — optional, same "opt-in feature" treatment as
+  // vapidPublicKey: an org's HR Admin only needs these to exist at the
+  // moment they click "Connect Google Calendar" (calendar.service.ts's
+  // connect-url/callback handlers), not for the app to start. No Google
+  // Cloud project exists for this repo yet — see .env.example for how to
+  // create one and fill these in.
+  googleClientId: process.env.GOOGLE_CLIENT_ID,
+  googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  googleRedirectUri: process.env.GOOGLE_REDIRECT_URI,
+  // AES-256-GCM key (32 bytes, hex) for calendar OAuth tokens at rest
+  // (common/crypto/tokenCrypto.ts). Unlike the Google credentials above,
+  // this has no external vendor dependency, so it's generated the same way
+  // JWT_SECRET is (openssl rand -hex 32) and can be set even before a
+  // Google Cloud project exists.
+  calendarTokenEncKey: process.env.CALENDAR_TOKEN_ENC_KEY,
 };

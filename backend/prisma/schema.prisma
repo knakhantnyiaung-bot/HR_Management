@@ -181,21 +181,22 @@ model Organization {
   createdAt      DateTime       @default(now()) @map("created_at")
   updatedAt      DateTime       @updatedAt @map("updated_at")
 
-  users              User[]
-  departments        Department[]
-  positions          Position[]
-  employees          Employee[]
-  attendanceRecords  AttendanceRecord[]
-  leaveTypes         LeaveType[]
-  payrollRuns        PayrollRun[]
-  auditLogs          AuditLog[]
-  geofenceZones      GeofenceZone[]
-  notificationEvents NotificationEvent[]
-  notifications      Notification[]
-  expenseCategories  ExpenseCategory[]
-  expenseClaims      ExpenseClaim[]
-  jobPostings        JobPosting[]
-  candidates         Candidate[]
+  users               User[]
+  departments         Department[]
+  positions           Position[]
+  employees           Employee[]
+  attendanceRecords   AttendanceRecord[]
+  leaveTypes          LeaveType[]
+  payrollRuns         PayrollRun[]
+  auditLogs           AuditLog[]
+  geofenceZones       GeofenceZone[]
+  notificationEvents  NotificationEvent[]
+  notifications       Notification[]
+  expenseCategories   ExpenseCategory[]
+  expenseClaims       ExpenseClaim[]
+  jobPostings         JobPosting[]
+  candidates          Candidate[]
+  calendarIntegration CalendarIntegration?
 
   @@map("organizations")
 }
@@ -215,13 +216,14 @@ model User {
   createdAt      DateTime   @default(now()) @map("created_at")
   updatedAt      DateTime   @updatedAt @map("updated_at")
 
-  organization              Organization             @relation(fields: [organizationId], references: [id])
-  employee                  Employee?
-  auditLogs                 AuditLog[]
-  notifications             Notification[]
-  notificationPreferences   NotificationPreference[]
-  pushSubscriptions         PushSubscription[]
-  hiringManagerApplications CandidateApplication[]
+  organization                  Organization             @relation(fields: [organizationId], references: [id])
+  employee                      Employee?
+  auditLogs                     AuditLog[]
+  notifications                 Notification[]
+  notificationPreferences       NotificationPreference[]
+  pushSubscriptions             PushSubscription[]
+  hiringManagerApplications     CandidateApplication[]
+  connectedCalendarIntegrations CalendarIntegration[]
 
   @@unique([organizationId, email])
   @@index([organizationId])
@@ -822,23 +824,55 @@ model CandidateApplication {
 }
 
 model Interview {
-  id               String          @id @default(uuid())
-  applicationId    String          @map("application_id")
-  scheduledAt      DateTime        @map("scheduled_at")
-  mode             InterviewMode   @default(ONSITE)
-  // Free-text, comma-separated — no calendar integration/participant table
-  // in Sprint 2 (HLD §9.1/out of scope).
-  interviewerNames String?         @map("interviewer_names")
-  feedback         String?
-  score            Int?
-  status           InterviewStatus @default(SCHEDULED)
-  createdAt        DateTime        @default(now()) @map("created_at")
-  updatedAt        DateTime        @updatedAt @map("updated_at")
+  id              String          @id @default(uuid())
+  applicationId   String          @map("application_id")
+  scheduledAt     DateTime        @map("scheduled_at")
+  mode            InterviewMode   @default(ONSITE)
+  // CAL-01..07 — replaces Sprint 2's free-text interviewerNames (no
+  // calendar integration then). Structured [{name, email}] — email is what
+  // lets CalendarProvider add real attendees to the Google Calendar event;
+  // a Sprint 2 interview's interviewerNames is migrated in with email left
+  // null (no calendar invite for a past interview, which is correct).
+  interviewers    Json            @default("[]")
+  // Set once a calendar event is created for this interview (only when the
+  // org has an ACTIVE CalendarIntegration); used to update/cancel the same
+  // event later instead of creating duplicates.
+  calendarEventId String?         @map("calendar_event_id")
+  feedback        String?
+  score           Int?
+  status          InterviewStatus @default(SCHEDULED)
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
 
   application CandidateApplication @relation(fields: [applicationId], references: [id])
 
   @@index([applicationId])
   @@map("interviews")
+}
+
+// CAL-01..07 — one Google account/calendar per org (Sprint 3 HLD §8: a
+// shared account like recruiting@, not per-interviewer OAuth). Tokens are
+// encrypted at rest (AES-256-GCM, common/crypto/tokenCrypto.ts) — the first
+// at-rest secret encryption in this codebase; passwords use bcrypt hashing,
+// which is one-way and doesn't apply here since the raw token must be
+// recoverable to call the Google API.
+model CalendarIntegration {
+  id                String   @id @default(uuid())
+  organizationId    String   @unique @map("organization_id")
+  provider          String   @default("GOOGLE")
+  accessTokenEnc    String   @map("access_token_enc")
+  refreshTokenEnc   String   @map("refresh_token_enc")
+  expiresAt         DateTime @map("expires_at")
+  calendarId        String   @map("calendar_id")
+  connectedByUserId String   @map("connected_by_user_id")
+  status            String   @default("ACTIVE")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  connectedBy  User         @relation(fields: [connectedByUserId], references: [id])
+
+  @@map("calendar_integrations")
 }
 
 // REC-04/REC-05 — only HR Admin/Super Admin create/send/rescind an offer;

@@ -65,16 +65,28 @@ export const assignHiringManagerSchema = z.object({
 
 export type AssignHiringManagerInput = z.infer<typeof assignHiringManagerSchema>;
 
+// CAL-01..07 — replaces Sprint 2's free-text interviewerNames. email is
+// optional per interviewer (someone might only know a name at scheduling
+// time) — createCalendarEventForInterview filters to interviewers with an
+// email when building the Google Calendar event's attendee list.
+const interviewerSchema = z.object({
+  name: z.string().min(1),
+  email: z.string().email().optional(),
+});
+
 export const createInterviewSchema = z.object({
   scheduledAt: z.coerce.date(),
   mode: z.nativeEnum(InterviewMode).default(InterviewMode.ONSITE),
-  interviewerNames: z.string().optional(),
+  interviewers: z.array(interviewerSchema).default([]),
 });
 
 export type CreateInterviewInput = z.infer<typeof createInterviewSchema>;
 
 export const updateInterviewSchema = z
   .object({
+    scheduledAt: z.coerce.date().optional(),
+    mode: z.nativeEnum(InterviewMode).optional(),
+    interviewers: z.array(interviewerSchema).optional(),
     feedback: z.string().optional(),
     score: z.coerce.number().int().min(0).max(100).optional(),
     status: z.nativeEnum(InterviewStatus).optional(),

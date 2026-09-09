@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { TextField } from "@/components/form/TextField";
 import { getApiErrorMessage } from "@/lib/api/client";
 import { useAuth } from "@/features/auth/AuthContext";
+import { CalendarIntegrationSection } from "@/features/organization/CalendarIntegrationSection";
 import { getOrganization, updateOrganization } from "@/features/organization/api";
 
 const orgSchema = z.object({
@@ -30,6 +31,7 @@ type CareersForm = z.infer<typeof careersSchema>;
 export function OrganizationSettingsSection() {
   const { user } = useAuth();
   const canEdit = user?.role === "SUPER_ADMIN";
+  const isHrRole = user?.role === "HR_ADMIN" || user?.role === "SUPER_ADMIN";
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
 
@@ -217,6 +219,8 @@ export function OrganizationSettingsSection() {
           </form>
         </div>
       )}
+
+      {isHrRole && <CalendarIntegrationSection />}
     </section>
   );
 }

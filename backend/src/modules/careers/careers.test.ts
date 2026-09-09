@@ -258,7 +258,10 @@ describe("careers module (CAREER-01..10)", () => {
     await authed("post", `/api/v1/recruitment/applications/${applicationId}/interviews`, hrToken).send({
       scheduledAt: "2026-11-20T09:00:00.000Z",
       mode: "REMOTE",
-      interviewerNames: "Alice Interviewer, Bob Interviewer",
+      interviewers: [
+        { name: "Alice Interviewer", email: "alice@test.local" },
+        { name: "Bob Interviewer" },
+      ],
     });
     await authed("post", `/api/v1/recruitment/applications/${applicationId}/offer`, hrToken).send({
       proposedSalary: 1_800_000,
@@ -272,7 +275,7 @@ describe("careers module (CAREER-01..10)", () => {
     expect(detail.status).toBe(200);
     expect(detail.body.data.interviews).toHaveLength(1);
     expect(detail.body.data.interviews[0].mode).toBe("REMOTE");
-    expect(detail.body.data.interviews[0].interviewerNames).toBeUndefined();
+    expect(detail.body.data.interviews[0].interviewers).toBeUndefined();
     expect(detail.body.data.interviews[0].feedback).toBeUndefined();
     expect(detail.body.data.interviews[0].score).toBeUndefined();
     expect(detail.body.data.offers).toHaveLength(1);

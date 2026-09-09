@@ -22,6 +22,7 @@ import {
 import { expensesRouter } from "@modules/expenses/expenses.routes";
 import { recruitmentRouter } from "@modules/recruitment/recruitment.routes";
 import { candidatePortalRouter, careersRouter } from "@modules/careers/careers.routes";
+import { calendarIntegrationRouter } from "@modules/calendar/calendar.routes";
 
 import { env } from "@config/env";
 import { errorHandler } from "@common/middleware/errorHandler";
@@ -61,6 +62,9 @@ export function createApp() {
   // Sprint 2 — mounted alongside (not nested under) organizationsRouter,
   // same pattern as departments/positions.
   v1.use("/organization", geofenceRouter);
+  // Sprint 3 Wave 1 — same "mounted alongside" pattern for calendar
+  // integration.
+  v1.use("/organization", calendarIntegrationRouter);
   v1.use("/departments", departmentsRouter);
   v1.use("/positions", positionsRouter);
   v1.use("/employees", employeesRouter);

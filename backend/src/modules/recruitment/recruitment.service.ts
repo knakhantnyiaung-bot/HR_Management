@@ -13,6 +13,11 @@ import {
 } from "@modules/employees/employees.service";
 import { emitNotificationEvent } from "@modules/notifications/notification.emitter";
 import { getHrAdminUserIds } from "@modules/notifications/notification.recipients";
+import {
+  cancelCalendarEventForInterview,
+  createCalendarEventForInterview,
+  updateCalendarEventForInterview,
+} from "@modules/calendar/calendar.service";
 import type {
   CreateCandidateInput,
   CreateHiringManagerInput,
@@ -468,18 +473,34 @@ function assertInterviewScope(
   }
 }
 
+// CAL-01..07 — resolves the candidate name + job title used in the Google
+// Calendar event's title. Small enough, and used from exactly two call
+// sites below, that a shared helper beats threading these through both.
+async function getInterviewCalendarContext(applicationId: string) {
+  const application = await prisma.candidateApplication.findUniqueOrThrow({
+    where: { id: applicationId },
+    include: { candidate: { select: { fullName: true } }, jobPosting: { select: { title: true } } },
+  });
+  return { candidateName: application.candidate.fullName, jobTitle: application.jobPosting.title };
+}
+
 export async function createInterview(
   organizationId: string,
   applicationId: string,
   input: CreateInterviewInput,
   actor: { userId: string; role: AuthContext["role"] },
 ) {
-  return prisma.$transaction(async (tx) => {
+  const interview = await prisma.$transaction(async (tx) => {
     const locked = await lockApplication(tx, organizationId, applicationId);
     assertInterviewScope(locked, actor);
 
     const interview = await tx.interview.create({
-      data: { applicationId, ...input },
+      data: {
+        applicationId,
+        scheduledAt: input.scheduledAt,
+        mode: input.mode,
+        interviewers: input.interviewers as Prisma.InputJsonValue,
+      },
     });
 
     await recordAudit(
@@ -511,6 +532,32 @@ export async function createInterview(
 
     return interview;
   });
+
+  // CAL-01..07 — outside the transaction: a network call to Google must
+  // never hold a DB lock open, and a failure here must never roll back the
+  // interview record itself (Sprint 3 HLD §8 — degrade gracefully to
+  // Sprint 2's no-calendar behavior). If the org has no ACTIVE
+  // CalendarIntegration this is a no-op (returns null).
+  try {
+    const context = await getInterviewCalendarContext(applicationId);
+    const eventId = await createCalendarEventForInterview(
+      organizationId,
+      interview.scheduledAt,
+      input.interviewers,
+      context,
+    );
+    if (eventId) {
+      return await prisma.interview.update({
+        where: { id: interview.id },
+        data: { calendarEventId: eventId },
+      });
+    }
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error(`[recruitment] calendar sync failed for interview ${interview.id}`, err);
+  }
+
+  return interview;
 }
 
 export async function updateInterview(
@@ -520,7 +567,7 @@ export async function updateInterview(
   input: UpdateInterviewInput,
   actor: { userId: string; role: AuthContext["role"] },
 ) {
-  return prisma.$transaction(async (tx) => {
+  const updated = await prisma.$transaction(async (tx) => {
     const locked = await lockApplication(tx, organizationId, applicationId);
     assertInterviewScope(locked, actor);
 
@@ -533,6 +580,7 @@ export async function updateInterview(
       where: { id: interviewId },
       data: {
         ...input,
+        interviewers: input.interviewers ? (input.interviewers as Prisma.InputJsonValue) : undefined,
         status: input.status ?? (input.feedback ? InterviewStatus.COMPLETED : existing.status),
       },
     });
@@ -551,6 +599,33 @@ export async function updateInterview(
 
     return updated;
   });
+
+  // CAL-01..07 — same outside-the-transaction, never-block rationale as
+  // createInterview. Cancelling syncs a Google event cancellation instead
+  // of an update; either way, only when this interview already has one
+  // (an org that connected calendar integration after the interview was
+  // first scheduled has no event to update).
+  if (updated.calendarEventId) {
+    try {
+      if (updated.status === InterviewStatus.CANCELLED) {
+        await cancelCalendarEventForInterview(organizationId, updated.calendarEventId);
+      } else {
+        const context = await getInterviewCalendarContext(applicationId);
+        await updateCalendarEventForInterview(
+          organizationId,
+          updated.calendarEventId,
+          updated.scheduledAt,
+          updated.interviewers as Array<{ name: string; email?: string }>,
+          context,
+        );
+      }
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error(`[recruitment] calendar sync failed for interview ${updated.id}`, err);
+    }
+  }
+
+  return updated;
 }
 
 // ---------------------------------------------------------------------------
