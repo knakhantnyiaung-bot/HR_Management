@@ -25,6 +25,7 @@ import { candidatePortalRouter, careersRouter } from "@modules/careers/careers.r
 import { calendarIntegrationRouter } from "@modules/calendar/calendar.routes";
 import { assetsRouter } from "@modules/assets/assets.routes";
 import { performanceRouter } from "@modules/performance/performance.routes";
+import { coursesRouter } from "@modules/courses/courses.routes";
 
 import { env } from "@config/env";
 import { errorHandler } from "@common/middleware/errorHandler";
@@ -88,6 +89,7 @@ export function createApp() {
   // Sprint 3 Wave 2.
   v1.use("/assets", assetsRouter);
   v1.use("/performance", performanceRouter);
+  v1.use("/courses", coursesRouter);
 
   app.use("/api/v1", v1);
 

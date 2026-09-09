@@ -31,6 +31,7 @@ import { CandidateProtectedRoute } from "@/features/careers/CandidateProtectedRo
 import { AssetsPage } from "@/features/assets/AssetsPage";
 import { PerformancePage } from "@/features/performance/PerformancePage";
 import { ReviewDetailPage } from "@/features/performance/ReviewDetailPage";
+import { CoursesPage } from "@/features/courses/CoursesPage";
 
 export function AppRoutes() {
   return (
@@ -81,6 +82,7 @@ export function AppRoutes() {
           <Route path="/assets" element={<AssetsPage />} />
           <Route path="/performance" element={<PerformancePage />} />
           <Route path="/performance/reviews/:id" element={<ReviewDetailPage />} />
+          <Route path="/courses" element={<CoursesPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
 
           <Route

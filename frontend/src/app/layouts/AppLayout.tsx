@@ -8,6 +8,7 @@ import {
   ChevronDown,
   Clock,
   FileText,
+  GraduationCap,
   Info,
   LayoutDashboard,
   LogOut,
@@ -177,6 +178,7 @@ export function AppLayout() {
       { to: "/expenses", label: "Expenses", icon: Receipt },
       { to: "/assets", label: "Assets", icon: Package },
       { to: "/performance", label: "Performance", icon: Star },
+      { to: "/courses", label: "Learning", icon: GraduationCap },
     );
   }
   if (isHrRole || user?.role === "HIRING_MANAGER") {
