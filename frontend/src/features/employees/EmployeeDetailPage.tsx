@@ -188,7 +188,103 @@ export function EmployeeDetailPage() {
       </div>
 
       <div className="mt-8">
+        <BankDetailsSection
+          employeeId={employeeId}
+          bankName={employee.bankName}
+          bankAccountName={employee.bankAccountName}
+          bankAccountNumber={employee.bankAccountNumber}
+        />
+      </div>
+
+      <div className="mt-8">
         <SalaryProfileSection employeeId={employeeId} />
+      </div>
+    </div>
+  );
+}
+
+// BANK-01 — populates one row of the bank disbursement CSV (payroll and
+// standalone expense reimbursement). Same "separate small section" choice
+// as ManagerSection above.
+function BankDetailsSection({
+  employeeId,
+  bankName,
+  bankAccountName,
+  bankAccountNumber,
+}: {
+  employeeId: string;
+  bankName: string | null;
+  bankAccountName: string | null;
+  bankAccountNumber: string | null;
+}) {
+  const queryClient = useQueryClient();
+  const [form, setForm] = useState({
+    bankName: bankName ?? "",
+    bankAccountName: bankAccountName ?? "",
+    bankAccountNumber: bankAccountNumber ?? "",
+  });
+
+  const mutation = useMutation({
+    mutationFn: () =>
+      updateEmployee(employeeId, {
+        bankName: form.bankName || null,
+        bankAccountName: form.bankAccountName || null,
+        bankAccountNumber: form.bankAccountNumber || null,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["employees", employeeId] });
+    },
+  });
+
+  const isDirty =
+    form.bankName !== (bankName ?? "") ||
+    form.bankAccountName !== (bankAccountName ?? "") ||
+    form.bankAccountNumber !== (bankAccountNumber ?? "");
+
+  return (
+    <div>
+      <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Bank details</h2>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+        Used to populate the bank disbursement CSV for payroll and reimbursements.
+      </p>
+      <div className="mt-2 card space-y-4">
+        <div className="grid grid-cols-3 gap-4">
+          <div>
+            <label className="label-field">Bank name</label>
+            <input
+              value={form.bankName}
+              onChange={(e) => setForm((f) => ({ ...f, bankName: e.target.value }))}
+              className="input-field-inset w-full"
+            />
+          </div>
+          <div>
+            <label className="label-field">Account name</label>
+            <input
+              value={form.bankAccountName}
+              onChange={(e) => setForm((f) => ({ ...f, bankAccountName: e.target.value }))}
+              className="input-field-inset w-full"
+            />
+          </div>
+          <div>
+            <label className="label-field">Account number</label>
+            <input
+              value={form.bankAccountNumber}
+              onChange={(e) => setForm((f) => ({ ...f, bankAccountNumber: e.target.value }))}
+              className="input-field-inset w-full"
+            />
+          </div>
+        </div>
+        {mutation.isError && (
+          <p className="error-text">{getApiErrorMessage(mutation.error, "Could not save bank details.")}</p>
+        )}
+        <button
+          type="button"
+          onClick={() => mutation.mutate()}
+          disabled={mutation.isPending || !isDirty}
+          className="btn-primary"
+        >
+          {mutation.isPending ? "Saving…" : "Save"}
+        </button>
       </div>
     </div>
   );

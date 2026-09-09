@@ -8,6 +8,7 @@ import {
   createExpenseCategoryHandler,
   createExpenseClaimHandler,
   downloadExpenseReceiptHandler,
+  getExpenseDisbursementCsvHandler,
   listExpenseCategoriesHandler,
   listExpenseClaimsHandler,
   reimburseExpenseClaimHandler,
@@ -66,4 +67,12 @@ expensesRouter.get(
   "/claims/:id/receipts/:receiptId/file",
   requireAuth,
   asyncHandler(downloadExpenseReceiptHandler),
+);
+
+// BANK-01 — Wave 3.
+expensesRouter.get(
+  "/disbursement-file",
+  requireAuth,
+  requireRole(...HR_ROLES),
+  asyncHandler(getExpenseDisbursementCsvHandler),
 );

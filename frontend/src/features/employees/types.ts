@@ -15,6 +15,10 @@ export interface EmployeeSummary {
   // PERF-07 — the employee's manager, if one is set. Used by performance
   // reviews to resolve who does the "manager" section.
   manager: { id: string; employeeNo: string; user: { email: string } } | null;
+  // BANK-01 — used to populate a row of the bank disbursement CSV.
+  bankName: string | null;
+  bankAccountName: string | null;
+  bankAccountNumber: string | null;
 }
 
 export interface CreateEmployeeResult extends EmployeeSummary {

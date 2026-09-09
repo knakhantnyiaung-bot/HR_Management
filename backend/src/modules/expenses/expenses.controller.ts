@@ -15,6 +15,7 @@ import {
   cancelExpenseClaim,
   createExpenseCategory,
   createExpenseClaim,
+  generateExpenseDisbursementCsv,
   getExpenseReceiptForDownload,
   listExpenseCategories,
   listExpenseClaims,
@@ -89,6 +90,14 @@ export async function reimburseExpenseClaimHandler(req: Request, res: Response):
   const input = reimburseExpenseClaimSchema.parse(req.body);
   const claim = await reimburseExpenseClaim(organizationId, requireIdParam(req), userId, input);
   res.json({ success: true, data: claim });
+}
+
+export async function getExpenseDisbursementCsvHandler(req: Request, res: Response): Promise<void> {
+  const { organizationId } = requireAuthContext(req);
+  const { csv, filename } = await generateExpenseDisbursementCsv(organizationId);
+  res.setHeader("Content-Type", "text/csv");
+  res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+  res.send(csv);
 }
 
 export async function uploadExpenseReceiptHandler(req: Request, res: Response): Promise<void> {

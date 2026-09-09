@@ -228,5 +228,25 @@ describe("expenses module", () => {
       expect(reimburse.status).toBe(409);
       expect(reimburse.body.error.code).toBe("INVALID_STATUS_TRANSITION");
     });
+
+    it("generates a bank disbursement CSV listing APPROVED unreimbursed claims (BANK-01)", async () => {
+      await authed("patch", `/api/v1/employees/${employeeId}`, hrToken).send({
+        bankName: "Expense Test Bank",
+        bankAccountName: "Expense Test Worker",
+        bankAccountNumber: "987654321",
+      });
+
+      const claimId = await createApprovedClaim(`${PERIOD}-15`);
+
+      const forbidden = await authed("get", "/api/v1/expenses/disbursement-file", employeeToken);
+      expect(forbidden.status).toBe(403);
+
+      const csvRes = await authed("get", "/api/v1/expenses/disbursement-file", hrToken);
+      expect(csvRes.status).toBe(200);
+      expect(csvRes.headers["content-type"]).toContain("text/csv");
+      expect(csvRes.text).toContain("Expense Test Bank");
+      expect(csvRes.text).toContain("987654321");
+      expect(csvRes.text).toContain(claimId);
+    });
   });
 });

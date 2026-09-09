@@ -26,6 +26,11 @@ export const updateEmployeeSchema = z
     // system (no separate org-chart feature); null clears it. Used by
     // performance reviews to resolve who does the "manager" section.
     managerId: z.string().uuid().nullable().optional(),
+    // BANK-01 — Wave 3 bank disbursement CSV. All optional/nullable —
+    // an org may not have collected bank details for every employee yet.
+    bankName: z.string().nullable().optional(),
+    bankAccountName: z.string().nullable().optional(),
+    bankAccountNumber: z.string().nullable().optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: "At least one field must be provided",

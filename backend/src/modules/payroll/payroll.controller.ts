@@ -5,6 +5,7 @@ import {
   approvePayrollRun,
   calculatePayrollRun,
   createPayrollRun,
+  generatePayrollDisbursementCsv,
   getPayrollRunById,
   listPayrollRuns,
   markPayrollRunPaid,
@@ -46,4 +47,12 @@ export async function markPayrollRunPaidHandler(req: Request, res: Response): Pr
   const { organizationId, userId } = requireAuthContext(req);
   const run = await markPayrollRunPaid(organizationId, requireIdParam(req), userId);
   res.json({ success: true, data: run });
+}
+
+export async function getPayrollDisbursementCsvHandler(req: Request, res: Response): Promise<void> {
+  const { organizationId } = requireAuthContext(req);
+  const { csv, filename } = await generatePayrollDisbursementCsv(organizationId, requireIdParam(req));
+  res.setHeader("Content-Type", "text/csv");
+  res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+  res.send(csv);
 }

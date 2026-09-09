@@ -5,6 +5,7 @@ import {
   approvePayrollRunHandler,
   calculatePayrollRunHandler,
   createPayrollRunHandler,
+  getPayrollDisbursementCsvHandler,
   getPayrollRunHandler,
   listPayrollRunsHandler,
   markPayrollRunPaidHandler,
@@ -39,4 +40,11 @@ payrollRouter.post(
   requireAuth,
   requireRole(...HR_ROLES),
   asyncHandler(markPayrollRunPaidHandler),
+);
+// BANK-01 — Wave 3.
+payrollRouter.get(
+  "/runs/:id/disbursement-file",
+  requireAuth,
+  requireRole(...HR_ROLES),
+  asyncHandler(getPayrollDisbursementCsvHandler),
 );

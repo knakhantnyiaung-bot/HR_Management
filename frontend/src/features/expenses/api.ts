@@ -106,3 +106,14 @@ export async function downloadExpenseReceipt(
   link.click();
   window.URL.revokeObjectURL(url);
 }
+
+// BANK-01 — same blob-download approach.
+export async function downloadExpenseDisbursementCsv(): Promise<void> {
+  const res = await apiClient.get("/expenses/disbursement-file", { responseType: "blob" });
+  const url = window.URL.createObjectURL(res.data as Blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `expense-disbursement-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.click();
+  window.URL.revokeObjectURL(url);
+}

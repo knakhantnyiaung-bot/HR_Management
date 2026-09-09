@@ -2,6 +2,7 @@ import { ExpenseClaimStatus, Prisma } from "@prisma/client";
 import { prisma } from "@database/prisma";
 import type { AuthContext } from "@common/auth/requireAuth";
 import { AppError } from "@common/errors/AppError";
+import { buildCsv } from "@common/csv/buildCsv";
 import { extensionForMimeType } from "@common/upload/multerConfig";
 import { storageAdapter } from "@common/storage/storageAdapter";
 import { recordAudit } from "@modules/audit/audit.service";
@@ -495,4 +496,51 @@ export async function getExpenseReceiptForDownload(
   }
 
   return receipt;
+}
+
+// ---------------------------------------------------------------------------
+// Bank disbursement — BANK-01 (Wave 3)
+// ---------------------------------------------------------------------------
+
+// Same eligibility as reimburseExpenseClaim: APPROVED and not already
+// attached to a payroll run. A read-only export — it doesn't mark
+// anything REIMBURSED; HR still does that per claim via POST .../reimburse
+// once the bank transfer is confirmed, same as recording any other
+// standalone reimbursement (EXP-09..11).
+export async function generateExpenseDisbursementCsv(
+  organizationId: string,
+): Promise<{ csv: string; filename: string }> {
+  const [claims, organization] = await Promise.all([
+    prisma.expenseClaim.findMany({
+      where: { organizationId, status: ExpenseClaimStatus.APPROVED, payrollItemId: null },
+      include: {
+        employee: {
+          select: {
+            employeeNo: true,
+            bankName: true,
+            bankAccountName: true,
+            bankAccountNumber: true,
+          },
+        },
+        category: { select: { name: true } },
+      },
+      orderBy: { employee: { employeeNo: "asc" } },
+    }),
+    prisma.organization.findUniqueOrThrow({ where: { id: organizationId }, select: { currency: true } }),
+  ]);
+
+  const csv = buildCsv(
+    ["Employee No", "Account Name", "Bank Name", "Account Number", "Amount", "Currency", "Reference"],
+    claims.map((claim) => [
+      claim.employee.employeeNo,
+      claim.employee.bankAccountName ?? "",
+      claim.employee.bankName ?? "",
+      claim.employee.bankAccountNumber ?? "",
+      claim.amount.toString(),
+      organization.currency,
+      `${claim.category.name} reimbursement (${claim.id})`,
+    ]),
+  );
+
+  return { csv, filename: `expense-disbursement-${new Date().toISOString().slice(0, 10)}.csv` };
 }

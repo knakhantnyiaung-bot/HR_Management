@@ -324,24 +324,33 @@ model Position {
 // ---------------------------------------------------------------------------
 
 model Employee {
-  id             String         @id @default(uuid())
-  organizationId String         @map("organization_id")
-  userId         String         @unique @map("user_id")
-  employeeNo     String         @map("employee_no")
-  joinDate       DateTime       @map("join_date") @db.Date
-  departmentId   String         @map("department_id")
-  positionId     String         @map("position_id")
-  workModel      WorkModel      @default(OFFICE) @map("work_model")
-  status         EmployeeStatus @default(DRAFT)
+  id                String         @id @default(uuid())
+  organizationId    String         @map("organization_id")
+  userId            String         @unique @map("user_id")
+  employeeNo        String         @map("employee_no")
+  joinDate          DateTime       @map("join_date") @db.Date
+  departmentId      String         @map("department_id")
+  positionId        String         @map("position_id")
+  workModel         WorkModel      @default(OFFICE) @map("work_model")
+  status            EmployeeStatus @default(DRAFT)
   // PERF-07 — the only manager/org-chart relationship in this system;
   // added for performance reviews' "manager review" step, not a general
   // org-chart feature. Self-referencing, nullable (most employees may have
   // no manager set, especially before this feature was added). Deeper
   // hierarchy (a manager's manager) is never walked — reviews only ever
   // look at an employee's direct manager.
-  managerId      String?        @map("manager_id")
-  createdAt      DateTime       @default(now()) @map("created_at")
-  updatedAt      DateTime       @updatedAt @map("updated_at")
+  managerId         String?        @map("manager_id")
+  // BANK-01 — Wave 3 bank disbursement: enough to populate one row of a
+  // bulk-transfer file (Sprint 3 HLD Appendix A). All optional — an
+  // employee added before this feature, or one paid by another method,
+  // has none of these set; the disbursement CSV renders a blank cell
+  // rather than blocking generation, so HR can see at a glance who still
+  // needs bank details on file.
+  bankName          String?        @map("bank_name")
+  bankAccountName   String?        @map("bank_account_name")
+  bankAccountNumber String?        @map("bank_account_number")
+  createdAt         DateTime       @default(now()) @map("created_at")
+  updatedAt         DateTime       @updatedAt @map("updated_at")
 
   organization Organization @relation(fields: [organizationId], references: [id])
   user         User         @relation(fields: [userId], references: [id])

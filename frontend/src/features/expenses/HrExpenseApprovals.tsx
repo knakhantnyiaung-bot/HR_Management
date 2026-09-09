@@ -7,6 +7,7 @@ import { formatDate } from "@/lib/format";
 import {
   approveExpenseClaim,
   createExpenseCategory,
+  downloadExpenseDisbursementCsv,
   listExpenseCategories,
   listExpenseClaims,
   reimburseExpenseClaim,
@@ -101,7 +102,13 @@ export function HrExpenseApprovals() {
     }
   }
 
-  const actionError = approveMutation.error ?? rejectMutation.error ?? reimburseMutation.error;
+  const downloadDisbursementMutation = useMutation({ mutationFn: downloadExpenseDisbursementCsv });
+
+  const actionError =
+    approveMutation.error ??
+    rejectMutation.error ??
+    reimburseMutation.error ??
+    downloadDisbursementMutation.error;
 
   return (
     <div className="space-y-8">
@@ -169,9 +176,22 @@ export function HrExpenseApprovals() {
       </section>
 
       <section>
-        <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-          All expense claims
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+            All expense claims
+          </h2>
+          <button
+            type="button"
+            onClick={() => downloadDisbursementMutation.mutate()}
+            disabled={downloadDisbursementMutation.isPending}
+            className="btn-text"
+          >
+            {downloadDisbursementMutation.isPending ? "Preparing…" : "Download disbursement file"}
+          </button>
+        </div>
+        <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+          A bank-ready CSV of every APPROVED claim not yet paid via a payroll run.
+        </p>
 
         <div className="mt-2 flex flex-wrap gap-3">
           <select

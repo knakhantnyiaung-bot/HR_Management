@@ -2,6 +2,7 @@ import type { PrismaClient } from "@prisma/client";
 import { ExpenseClaimStatus, PayrollRunStatus, Prisma } from "@prisma/client";
 import { prisma } from "@database/prisma";
 import { AppError } from "@common/errors/AppError";
+import { buildCsv } from "@common/csv/buildCsv";
 import { recordAudit } from "@modules/audit/audit.service";
 import { calculatePayrollItem, periodToDateRange } from "@modules/payroll/payroll.calculator";
 import type { ListPayrollRunsQuery } from "@modules/payroll/payroll.schema";
@@ -401,4 +402,61 @@ export async function markPayrollRunPaid(organizationId: string, runId: string, 
 
     return reloadPayrollRun(tx, runId);
   });
+}
+
+// BANK-01 — one row per employee's net pay for this run, in a generic
+// bulk-transfer CSV shape (Beneficiary Name/Bank Name/Account Number/
+// Amount/Currency/Reference). No bank API to call (Sprint 3 HLD Appendix
+// A) — HR downloads this and uploads it to their bank's own bulk-payment
+// portal. Every employee in the run is included even with blank bank
+// fields, so an incomplete row is visible to HR rather than silently
+// dropped from the file.
+export async function generatePayrollDisbursementCsv(
+  organizationId: string,
+  runId: string,
+): Promise<{ csv: string; filename: string }> {
+  const run = await prisma.payrollRun.findFirst({
+    where: { id: runId, organizationId },
+    include: {
+      organization: { select: { currency: true } },
+      items: {
+        include: {
+          employee: {
+            select: {
+              employeeNo: true,
+              bankName: true,
+              bankAccountName: true,
+              bankAccountNumber: true,
+              user: { select: { email: true } },
+            },
+          },
+        },
+        orderBy: { employee: { employeeNo: "asc" } },
+      },
+    },
+  });
+  if (!run) {
+    throw AppError.notFound("PayrollRun");
+  }
+  if (run.status !== PayrollRunStatus.APPROVED && run.status !== PayrollRunStatus.PAID) {
+    throw AppError.conflict(
+      "PAYROLL_RUN_NOT_APPROVED",
+      `Cannot generate a disbursement file for a payroll run in status ${run.status}`,
+    );
+  }
+
+  const csv = buildCsv(
+    ["Employee No", "Account Name", "Bank Name", "Account Number", "Amount", "Currency", "Reference"],
+    run.items.map((item) => [
+      item.employee.employeeNo,
+      item.employee.bankAccountName ?? "",
+      item.employee.bankName ?? "",
+      item.employee.bankAccountNumber ?? "",
+      item.net.toString(),
+      run.organization.currency,
+      `Payroll ${run.period}`,
+    ]),
+  );
+
+  return { csv, filename: `payroll-disbursement-${run.period}.csv` };
 }

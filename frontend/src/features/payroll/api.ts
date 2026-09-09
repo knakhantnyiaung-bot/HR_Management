@@ -40,3 +40,16 @@ export async function markPayrollRunPaid(id: string): Promise<PayrollRun> {
   const res = await apiClient.post<ApiSuccess<PayrollRun>>(`/payroll/runs/${id}/mark-paid`);
   return res.data.data;
 }
+
+// BANK-01 — same "fetch as a blob, hand the browser a local object URL"
+// approach as downloadExpenseReceipt: the route needs the same Bearer auth
+// as every other API call, so a plain <a href> can't authenticate it.
+export async function downloadPayrollDisbursementCsv(id: string, period: string): Promise<void> {
+  const res = await apiClient.get(`/payroll/runs/${id}/disbursement-file`, { responseType: "blob" });
+  const url = window.URL.createObjectURL(res.data as Blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `payroll-disbursement-${period}.csv`;
+  link.click();
+  window.URL.revokeObjectURL(url);
+}

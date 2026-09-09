@@ -8,6 +8,7 @@ import { formatCount, formatMoney } from "@/lib/format";
 import {
   approvePayrollRun,
   calculatePayrollRun,
+  downloadPayrollDisbursementCsv,
   getPayrollRun,
   markPayrollRunPaid,
 } from "@/features/payroll/api";
@@ -29,7 +30,11 @@ export function PayrollRunDetailPage() {
   const calculateMutation = useMutation({ mutationFn: () => calculatePayrollRun(runId), onSuccess: invalidate });
   const approveMutation = useMutation({ mutationFn: () => approvePayrollRun(runId), onSuccess: invalidate });
   const markPaidMutation = useMutation({ mutationFn: () => markPayrollRunPaid(runId), onSuccess: invalidate });
-  const actionError = calculateMutation.error ?? approveMutation.error ?? markPaidMutation.error;
+  const downloadMutation = useMutation({
+    mutationFn: (period: string) => downloadPayrollDisbursementCsv(runId, period),
+  });
+  const actionError =
+    calculateMutation.error ?? approveMutation.error ?? markPaidMutation.error ?? downloadMutation.error;
   const isActionPending =
     calculateMutation.isPending || approveMutation.isPending || markPaidMutation.isPending;
 
@@ -93,6 +98,16 @@ export function PayrollRunDetailPage() {
             className="btn-primary"
           >
             {markPaidMutation.isPending ? "Marking paid…" : "Mark as paid"}
+          </button>
+        )}
+        {(run.status === "APPROVED" || run.status === "PAID") && (
+          <button
+            type="button"
+            onClick={() => downloadMutation.mutate(run.period)}
+            disabled={downloadMutation.isPending}
+            className="btn-secondary"
+          >
+            {downloadMutation.isPending ? "Preparing…" : "Download disbursement file"}
           </button>
         )}
       </div>

@@ -263,4 +263,45 @@ describe("payroll module", () => {
     });
     expect(approvedAuditCount).toBe(1);
   });
+
+  it("generates a bank disbursement CSV once approved, blank for missing bank details, and rejects it before approval (BANK-01)", async () => {
+    const { employeeId } = await createActiveEmployee("worker.bank", "EmpPassword123!");
+    await authed("patch", `/api/v1/employees/${employeeId}/salary-profile`, hrToken).send({
+      basicSalary: 600_000,
+    });
+    await authed("patch", `/api/v1/employees/${employeeId}`, hrToken).send({
+      bankName: "Test Bank",
+      bankAccountName: "Test Worker",
+      bankAccountNumber: "123456789",
+    });
+
+    const create = await authed("post", "/api/v1/payroll/runs", hrToken).send({ period: "2027-01" });
+    const runId = create.body.data.id;
+
+    const beforeCalculate = await authed(
+      "get",
+      `/api/v1/payroll/runs/${runId}/disbursement-file`,
+      hrToken,
+    );
+    expect(beforeCalculate.status).toBe(409);
+    expect(beforeCalculate.body.error.code).toBe("PAYROLL_RUN_NOT_APPROVED");
+
+    await authed("post", `/api/v1/payroll/runs/${runId}/calculate`, hrToken);
+
+    const beforeApprove = await authed(
+      "get",
+      `/api/v1/payroll/runs/${runId}/disbursement-file`,
+      hrToken,
+    );
+    expect(beforeApprove.status).toBe(409);
+
+    await authed("post", `/api/v1/payroll/runs/${runId}/approve`, hrToken);
+
+    const csvRes = await authed("get", `/api/v1/payroll/runs/${runId}/disbursement-file`, hrToken);
+    expect(csvRes.status).toBe(200);
+    expect(csvRes.headers["content-type"]).toContain("text/csv");
+    expect(csvRes.text).toContain("Test Bank");
+    expect(csvRes.text).toContain("123456789");
+    expect(csvRes.text).toContain("600000");
+  });
 });
