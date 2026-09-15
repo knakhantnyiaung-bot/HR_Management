@@ -17,5 +17,14 @@ COPY package*.json ./
 COPY prisma ./prisma
 RUN npm install --omit=dev && npx prisma generate
 COPY --from=build /app/dist ./dist
+
+# Local file storage (backend/src/common/storage/storageAdapter.ts) needs a
+# writable dir under /app at runtime, and the non-root "node" user (built
+# into the base image) needs ownership of everything it will read/execute.
+RUN mkdir -p /app/storage && chown -R node:node /app
+USER node
+
 EXPOSE 4000
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+  CMD wget -qO- http://127.0.0.1:4000/health || exit 1
 CMD ["node", "dist/server.js"]

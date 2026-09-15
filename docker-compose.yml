@@ -4,18 +4,26 @@ services:
     container_name: hr_payroll_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: hr_payroll
-      POSTGRES_PASSWORD: hr_payroll_dev
-      POSTGRES_DB: hr_payroll
-    ports:
-      - "5432:5432"
+      POSTGRES_USER: ${POSTGRES_USER:-hr_payroll}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set (see .env.example)}
+      POSTGRES_DB: ${POSTGRES_DB:-hr_payroll}
+    # No host port published — only the backend (on the compose network)
+    # needs to reach postgres. For local debugging, run:
+    #   docker compose exec postgres psql -U hr_payroll
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U hr_payroll"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hr_payroll}"]
       interval: 5s
       timeout: 5s
       retries: 5
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 512M
 
   backend:
     build:
@@ -26,24 +34,45 @@ services:
     environment:
       NODE_ENV: production
       PORT: 4000
-      DATABASE_URL: postgresql://hr_payroll:hr_payroll_dev@postgres:5432/hr_payroll?schema=public
-      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-hr_payroll}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set (see .env.example)}@postgres:5432/${POSTGRES_DB:-hr_payroll}?schema=public
+      # Auth secrets — no insecure fallback. The app itself fails fast
+      # without these (see backend/.env.example); compose enforces the same
+      # rule so a missing .env fails at `docker compose up`, not at runtime.
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set (see .env.example)}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-8h}
-      CANDIDATE_JWT_SECRET: ${CANDIDATE_JWT_SECRET:-change-me-in-production-too}
+      CANDIDATE_JWT_SECRET: ${CANDIDATE_JWT_SECRET:?CANDIDATE_JWT_SECRET must be set (see .env.example)}
       CANDIDATE_JWT_EXPIRES_IN: ${CANDIDATE_JWT_EXPIRES_IN:-8h}
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5174}
+      CORS_ORIGIN: ${CORS_ORIGIN:?CORS_ORIGIN must be set (see .env.example)}
       DEFAULT_TIMEZONE: ${DEFAULT_TIMEZONE:-Asia/Yangon}
       DEFAULT_CURRENCY: ${DEFAULT_CURRENCY:-MMK}
       VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-}
       CALENDAR_TOKEN_ENC_KEY: ${CALENDAR_TOKEN_ENC_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-sonnet-5}
     ports:
       - "4000:4000"
     depends_on:
       postgres:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4000/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 512M
 
   frontend:
     build:
@@ -53,9 +82,25 @@ services:
     container_name: hr_payroll_frontend
     restart: unless-stopped
     ports:
-      - "5174:80"
+      - "5174:8080"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
 
 volumes:
   postgres_data:
